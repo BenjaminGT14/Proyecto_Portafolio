@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#fcf8fa",
+                    "on-secondary-fixed-variant": "#004c6b",
+                    "on-tertiary-container": "#98805d",
+                    "surface-container-highest": "#e4e2e4",
+                    "primary-fixed": "#dae2fd",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c6c6cd",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#000000",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f3f0f2",
+                    "on-background": "#1b1b1d",
+                    "surface-bright": "#fcf8fa",
+                    "tertiary-fixed-dim": "#dec29a",
+                    "inverse-primary": "#bec6e0",
+                    "on-tertiary-fixed": "#271901",
+                    "secondary-fixed": "#c6e7ff",
+                    "on-surface": "#1b1b1d",
+                    "secondary": "#00658d",
+                    "on-secondary-container": "#004663",
+                    "tertiary-fixed": "#fcdeb5",
+                    "on-primary-fixed": "#131b2e",
+                    "background": "#fcf8fa",
+                    "secondary-fixed-dim": "#81cfff",
+                    "on-secondary": "#ffffff",
+                    "surface-tint": "#565e74",
+                    "surface-variant": "#e4e2e4",
+                    "on-surface-variant": "#45464d",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#dcd9db",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#76777d",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "secondary-container": "#00baff",
+                    "on-error-container": "#93000a",
+                    "inverse-surface": "#303032",
+                    "primary": "#000000",
+                    "surface-container-high": "#eae7e9",
+                    "primary-container": "#131b2e",
+                    "surface-container-low": "#f6f3f5",
+                    "on-tertiary-fixed-variant": "#574425",
+                    "on-error": "#ffffff",
+                    "surface-container": "#f0edef",
+                    "primary-fixed-dim": "#bec6e0",
+                    "on-primary-container": "#7c839b",
+                    "on-secondary-fixed": "#001e2d",
+                    "tertiary-container": "#271901"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "xs": "4px",
+                    "lg": "48px",
+                    "container-max": "1280px",
+                    "base": "8px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "h1": ["Inter"],
+                    "label-md": ["Inter"],
+                    "h2": ["Inter"],
+                    "display": ["Inter"],
+                    "h3": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "1", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface font-['Inter'] text-on-surface">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]">
+<div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+<div class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tighter">Entreteca</div>
+<div class="hidden md:flex items-center space-x-8">
+<a class="font-['Inter'] text-sm font-medium tracking-tight text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 pb-1" href="#">Inicio</a>
+<a class="font-['Inter'] text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200" href="#">Explorar</a>
+<a class="font-['Inter'] text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200" href="#">Mapa</a>
+<a class="font-['Inter'] text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200" href="#">Favoritos</a>
+<a class="font-['Inter'] text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200" href="#">Login</a>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-md hover:scale-105 active:scale-95 transition-transform duration-200">
+                Explorar ahora
+            </button>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="relative min-h-[870px] flex items-center pt-20 overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img alt="City skyline at dusk" class="w-full h-full object-cover" data-alt="Modern city skyline at twilight with glowing skyscraper lights and deep blue sky in high-end photography style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1T1gRRDdTTwgAzV8oLZQyJmNdOWl7JF39UExw4BmD41iAdcaiWhdoRT9Q_XwJlZdJ1Y6EEZsiPmLK7BTmqap7WCBKai66SMCoAwDjBwevnUlpmFjmOnifKJW3jutQemwtZB2mD8TesrH3St_-DYmIIgglWUdN0rkwON6bvHhenNcEujn6hipFUvzVA_y_pcYl1UK1n2-F_vM6AjZ3CmIMQkdNeVqSvT9kf2XQqAUU1Vhssg7KpC0nETXVHZM-fhTotzlZmPkLnmQ"/>
+<div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]"></div>
+</div>
+<div class="relative z-10 max-w-7xl mx-auto px-6 w-full text-center md:text-left">
+<div class="max-w-2xl">
+<h1 class="font-display text-display text-white mb-4">Descubre qué hacer cerca de ti</h1>
+<p class="font-body-lg text-body-lg text-slate-200 mb-10">Eventos, cultura y naturaleza en un solo lugar. El panorama perfecto está más cerca de lo que crees.</p>
+<div class="bg-white p-4 rounded-xl shadow-2xl flex flex-col md:flex-row gap-4 items-center">
+<div class="w-full flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-11 pr-4 py-3 rounded-lg border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary outline-none text-body-md" placeholder="¿Qué buscas hoy?" type="text"/>
+</div>
+<select class="w-full md:w-40 px-4 py-3 rounded-lg border border-outline-variant text-body-md focus:border-secondary focus:ring-1 focus:ring-secondary outline-none">
+<option>Categoría</option>
+<option>Museos</option>
+<option>Parques</option>
+<option>Cultura</option>
+</select>
+<select class="w-full md:w-40 px-4 py-3 rounded-lg border border-outline-variant text-body-md focus:border-secondary focus:ring-1 focus:ring-secondary outline-none">
+<option>Todos los precios</option>
+<option>Gratis</option>
+<option>Bajo costo</option>
+</select>
+<button class="w-full md:w-auto bg-secondary text-white px-8 py-3 rounded-lg font-label-md hover:brightness-110 active:scale-95 transition-all">
+                        Buscar
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Split Map Section -->
+<section class="max-w-7xl mx-auto px-6 py-xl">
+<div class="flex flex-col lg:flex-row gap-gutter h-[700px]">
+<!-- Interactive Map -->
+<div class="flex-1 bg-surface-container rounded-xl overflow-hidden shadow-sm relative group">
+<img alt="Map view" class="w-full h-full object-cover" data-alt="High quality aerial cartographic view of a modern urban city grid with park areas and landmark pins in a clean aesthetic" data-location="Santiago, Chile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuieDWv8re2e_O_Xl1K6li6F2Bov_hpoGrS7f0-BI_5u0INmLQV-jz9ujfkdYBpPqj4bcpcdvVShEmeU6rxPMwIIVpotOOPpj1rh_Y0VeeG1UL5x0xvzSSCsd7OC3giGSMtnpzpR7Q__P-QJLNEjvW2p7spdDbOzO279aViPwiGqTRoqrgSSEJk00H79kEcpe31wgO5EV1KueTWU6guNRJz_58690Suk5d61s6G1-nFHSCE6wSZ3TNPnkoj9zh5l9xz_pzm0wcZVk"/>
+<div class="absolute inset-0 bg-secondary/5 pointer-events-none"></div>
+<!-- Custom Markers Simulation -->
+<div class="absolute top-1/3 left-1/4 w-10 h-10 bg-secondary text-white rounded-full flex items-center justify-center shadow-lg transform -translate-x-1/2 -translate-y-1/2 border-2 border-white">
+<span class="material-symbols-outlined text-sm">museum</span>
+</div>
+<div class="absolute top-1/2 left-1/2 w-10 h-10 bg-on-tertiary-container text-white rounded-full flex items-center justify-center shadow-lg transform -translate-x-1/2 -translate-y-1/2 border-2 border-white">
+<span class="material-symbols-outlined text-sm">park</span>
+</div>
+</div>
+<!-- List of Cards -->
+<div class="w-full lg:w-[450px] flex flex-col gap-4 overflow-y-auto no-scrollbar pr-2">
+<h3 class="font-h3 text-h3 mb-2 flex items-center justify-between">
+                    Resultados cercanos
+                    <span class="text-label-sm text-outline font-normal">24 encontrados</span>
+</h3>
+<!-- Card 1 -->
+<div class="group bg-white rounded-xl p-3 flex gap-4 border border-outline-variant hover:shadow-lg transition-all duration-300">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Art museum gallery" class="w-full h-full object-cover" data-alt="Minimalist art gallery interior with white walls and modern abstract paintings under soft track lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCzVN1zFZpyUxxR_6T6M9QIZoDpQq3RGK0jDhV0GKo4yKCTCTqy3-f2k0AnaRDVNA9O4QTWHIXUlphYLsoOGssOULQOuyX-SJ5m_9HC_4pWSv2b1m5gu8afwbMSuXZLq-A-IkxnlaNk2pGD_hMpjhqko87nvBfTJCnXjGl2qH-BaEriViDJqoM0TAq6PYnASXZO_Ql6yAnTFeHhj8Pm7W1ij_0FvV1SKKzbaSNIKyTvjfsAQMooGN7CmktJXnFJMJYoZCgu_W2Rac"/>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<span class="text-[10px] uppercase tracking-wider font-bold text-secondary">Museo</span>
+<button class="material-symbols-outlined text-outline hover:text-error text-[20px] transition-colors" data-weight="fill">favorite</button>
+</div>
+<h4 class="font-h3 text-body-md mt-1">Museo de Bellas Artes</h4>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-label-sm">4.8 (2.4k)</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-semibold text-secondary-container bg-secondary-fixed px-2 py-0.5 rounded text-[11px]">Gratis</span>
+<button class="text-secondary text-label-sm font-bold flex items-center gap-1">Ver más <span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-white rounded-xl p-3 flex gap-4 border border-outline-variant hover:shadow-lg transition-all duration-300">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Botanical garden" class="w-full h-full object-cover" data-alt="Lush green botanical garden with tropical plants and a small stone path under filtered sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQxqK-giYa3BDoIwH3ekTOws4rYIn8km60SiCMQlRwxKWwZ3JeEg1TLYFSZV8lELOgeE8h5xQLgMZKIzREUZMsy7xLbzWwmQjOqGPL7wkVsOf9i7fZbQhFlL2jw2Ggxt4MGhdi02Mgrvnl_3XubZtHA_-L-SEF3VIsxY_Pqd3s9f_HcVzWwc9mFAgRNdp09lHpZmkqK8ABYudo9W1tU6d1TIvQCFvm2YrZj4Y-Age4OWWnQHhyhdVoDThIqdymIzoVIeaV7HUrMDE"/>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<span class="text-[10px] uppercase tracking-wider font-bold text-on-tertiary-container">Naturaleza</span>
+<button class="material-symbols-outlined text-outline hover:text-error text-[20px] transition-colors">favorite</button>
+</div>
+<h4 class="font-h3 text-body-md mt-1">Jardín Botánico Central</h4>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-label-sm">4.6 (1.1k)</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-semibold text-on-secondary-fixed-variant bg-secondary-fixed px-2 py-0.5 rounded text-[11px]">$5.000</span>
+<button class="text-secondary text-label-sm font-bold flex items-center gap-1">Ver más <span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-white rounded-xl p-3 flex gap-4 border border-outline-variant hover:shadow-lg transition-all duration-300">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Live concert lighting" class="w-full h-full object-cover" data-alt="Vibrant outdoor concert stage at night with colorful light beams and a blurred crowd silhouette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApr8mRw0Y_7CRgHQDRlrlWDkboS0fTAVHOnjNoe1L1VwNLd4SrDGMwUwRN61NTQ2cuw4QJJI5ZaM0f2D7ahFyol4QUZmkelyIY4uDtLZOzoSheeO1m6hN7FUJhx0PkUkNdqlPJVWaRGv4EDp1R6KaoZc4hvWmw9EamH2eOpudi5vPRG049f9bCO7faktK-Xx0Jv4Lggs7rN-Lu4nrimjxcMiXguylko4I81aDVL0LQynsrPTmnK1Q-KdK7JObAx2wUQOUACivcJuw"/>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<span class="text-[10px] uppercase tracking-wider font-bold text-error">Eventos</span>
+<button class="material-symbols-outlined text-outline hover:text-error text-[20px] transition-colors">favorite</button>
+</div>
+<h4 class="font-h3 text-body-md mt-1">Festival de Jazz al Aire Libre</h4>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-label-sm">4.9 (850)</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-semibold text-secondary-container bg-secondary-fixed px-2 py-0.5 rounded text-[11px]">Gratis</span>
+<button class="text-secondary text-label-sm font-bold flex items-center gap-1">Ver más <span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Categories Grid -->
+<section class="bg-surface-container-low py-xl">
+<div class="max-w-7xl mx-auto px-6">
+<h2 class="font-h2 text-h2 mb-10 text-center">Explora por categorías</h2>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+<!-- Museos -->
+<a class="group bg-white p-6 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md hover:-translate-y-1 transition-all text-center" href="#">
+<div class="w-12 h-12 bg-secondary-fixed rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary">museum</span>
+</div>
+<span class="font-label-md block">Museos</span>
+</a>
+<!-- Parques -->
+<a class="group bg-white p-6 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md hover:-translate-y-1 transition-all text-center" href="#">
+<div class="w-12 h-12 bg-tertiary-fixed rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-on-tertiary-container">park</span>
+</div>
+<span class="font-label-md block">Parques</span>
+</a>
+<!-- Eventos -->
+<a class="group bg-white p-6 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md hover:-translate-y-1 transition-all text-center" href="#">
+<div class="w-12 h-12 bg-error-container rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-error">event</span>
+</div>
+<span class="font-label-md block">Eventos</span>
+</a>
+<!-- Cultura -->
+<a class="group bg-white p-6 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md hover:-translate-y-1 transition-all text-center" href="#">
+<div class="w-12 h-12 bg-primary-fixed rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary">theater_comedy</span>
+</div>
+<span class="font-label-md block">Cultura</span>
+</a>
+<!-- Naturaleza -->
+<a class="group bg-white p-6 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md hover:-translate-y-1 transition-all text-center" href="#">
+<div class="w-12 h-12 bg-secondary-fixed-dim rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-on-secondary-container">landscape</span>
+</div>
+<span class="font-label-md block">Naturaleza</span>
+</a>
+<!-- Gratis Hoy -->
+<a class="group bg-white p-6 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md hover:-translate-y-1 transition-all text-center" href="#">
+<div class="w-12 h-12 bg-on-primary-fixed rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-white">volunteer_activism</span>
+</div>
+<span class="font-label-md block">Gratis hoy</span>
+</a>
+</div>
+</div>
+</section>
+<!-- Collaborative Reviews -->
+<section class="max-w-7xl mx-auto px-6 py-xl">
+<div class="flex flex-col md:flex-row justify-between items-end mb-10">
+<div>
+<h2 class="font-h2 text-h2">Opiniones de la comunidad</h2>
+<p class="font-body-md text-outline mt-2">Lo que dicen otros exploradores como tú.</p>
+</div>
+<button class="hidden md:flex items-center gap-2 text-secondary font-bold hover:underline">
+                Escribir una reseña <span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Review 1 -->
+<div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm relative">
+<div class="flex items-center gap-3 mb-4">
+<img alt="User avatar" class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a smiling young woman with natural lighting in a high-end photography style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpep55-yIkKu2ICqKHCTAA5kXde1scJY5-qKjEAqysyu6_4ACnB7YRFqPI_jFHG_QT1LtwdnHGXXr9x9DYLbmh1BSP3Q7Ai5Rk5irJesnUFu7W4L3EawlCmi6z4iXeP2xvCTWQ0z9waTwfQLckLjidbl0g2TB8YzjJQTRW9qlZ1h2I2mu5YMmHXj6cXQKUxjZ65BMlOLWQ_PimOq1FU6eoMkWdu7F41jRpT9NYI4RdDx698xdm_RMmeUkuMFRTSEkP1D6Bjxp3S_s"/>
+<div>
+<p class="font-label-md">Andrea Valdés</p>
+<p class="text-[10px] text-outline uppercase tracking-wide">Hace 2 días</p>
+</div>
+</div>
+<div class="flex mb-3">
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-sm text-on-surface-variant italic mb-6">"El Museo de Bellas Artes es increíble los domingos, ¡la entrada gratuita es un gran beneficio! Muy recomendado para ir en familia."</p>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1 text-label-sm text-outline hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-lg">thumb_up</span> 24
+                    </button>
+<button class="flex items-center gap-1 text-label-sm text-outline hover:text-error transition-colors">
+<span class="material-symbols-outlined text-lg">thumb_down</span> 2
+                    </button>
+</div>
+</div>
+<!-- Review 2 -->
+<div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm relative">
+<div class="flex items-center gap-3 mb-4">
+<img alt="User avatar" class="w-12 h-12 rounded-full object-cover" data-alt="Professional portrait of a young man with a slight smile and soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJYxoL5q2iESrmTz6YXMMwiaseCB0Gbqhncr5_f-2IhjAIAGndB_Vmd3tPrLz_ywwjMp0hvEcIHyiuJW2Vf-nKwg-Ag1MWaPveTVbU9sQm0m7jO2u55tOXfUWLz2_AY0hCz7kmHfL23BcclZAXu0Ylb34XqPwlmW8JUWC9paQWdrnPS8NYlqtXeQwVK37uVba5-uoCSxXbnI-CfDCoZUJhgJ6whhhAURBiiIuEcL-raxSCYcHbW_cF2Fe3vYDdFkDIxFoIrYnh8ag"/>
+<div>
+<p class="font-label-md">Ricardo Soto</p>
+<p class="text-[10px] text-outline uppercase tracking-wide">Hace 5 días</p>
+</div>
+</div>
+<div class="flex mb-3">
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 0;">star</span>
+</div>
+<p class="font-body-sm text-on-surface-variant italic mb-6">"Fui al Jardín Botánico el sábado pasado. Un poco lleno pero ideal para desconectarse de la ciudad. Traigan protector solar!"</p>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1 text-label-sm text-outline hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-lg">thumb_up</span> 18
+                    </button>
+<button class="flex items-center gap-1 text-label-sm text-outline hover:text-error transition-colors">
+<span class="material-symbols-outlined text-lg">thumb_down</span> 0
+                    </button>
+</div>
+</div>
+<!-- Review 3 -->
+<div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm relative">
+<div class="flex items-center gap-3 mb-4">
+<img alt="User avatar" class="w-12 h-12 rounded-full object-cover" data-alt="Close-up artistic portrait of a woman with vibrant lighting and contemporary style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSJaxGtSH4BQODAWu4r18-Jk3Gf4vrEn28so98wWpljiM-000B3aW9VfSZ68uagaMwuB8bQzDIk2uPuYR7wHrOiXQxIk3R235-E35zT4v-236ZplwRKi4s3GziWKsCiDzGL7MOz44Gxn__w4onMWjA41aKgGYOmulmeUa1meY9azZZEq9oJf1mqkngUd31pRslp68VDtYrOcXZNKkr290iUbPhFrXG9Dc7xxUzhhcmguaEm9pZRkUWLfGcM5G5IWivtRJrvHrycZM"/>
+<div>
+<p class="font-label-md">Elena Rojas</p>
+<p class="text-[10px] text-outline uppercase tracking-wide">Ayer</p>
+</div>
+</div>
+<div class="flex mb-3">
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-sm text-on-surface-variant italic mb-6">"El festival de Jazz estuvo impecable. Muy buena organización y seguridad. Usé Entreteca para encontrar el mapa del evento."</p>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1 text-label-sm text-outline hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-lg">thumb_up</span> 42
+                    </button>
+<button class="flex items-center gap-1 text-label-sm text-outline hover:text-error transition-colors">
+<span class="material-symbols-outlined text-lg">thumb_down</span> 1
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="max-w-7xl mx-auto px-6 py-xl">
+<div class="relative bg-gradient-to-r from-on-primary-fixed to-secondary p-12 rounded-3xl overflow-hidden shadow-xl text-center md:text-left">
+<div class="relative z-10 md:flex items-center justify-between">
+<div class="max-w-xl">
+<h2 class="font-display text-white text-3xl md:text-4xl mb-4">Empieza a explorar tu ciudad hoy</h2>
+<p class="font-body-md text-slate-200 opacity-90 mb-8 md:mb-0">Únete a miles de personas que redescubren sus rincones favoritos cada semana.</p>
+</div>
+<button class="bg-white text-primary px-10 py-4 rounded-xl font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-lg">
+                    Ver panoramas cercanos
+                </button>
+</div>
+<!-- Decorative circle -->
+<div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full py-16 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+<div>
+<span class="text-lg font-bold text-slate-900 dark:text-white mb-4 block">Entreteca</span>
+<p class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400">© 2024 Entreteca. Inspiración y cultura en cada rincón.</p>
+</div>
+<div>
+<h5 class="font-label-md mb-6 uppercase tracking-widest text-[10px] text-outline">Explorar</h5>
+<ul class="space-y-4">
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Museos</a></li>
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Parques</a></li>
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Cultura</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-label-md mb-6 uppercase tracking-widest text-[10px] text-outline">Legal</h5>
+<ul class="space-y-4">
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Aviso Legal</a></li>
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Política de Privacidad</a></li>
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Cookies</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-label-md mb-6 uppercase tracking-widest text-[10px] text-outline">Comunidad</h5>
+<ul class="space-y-4">
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Sobre el Proyecto</a></li>
+<li><a class="font-['Inter'] text-sm leading-relaxed text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:translate-x-1 transition-transform duration-200 block" href="#">Contacto</a></li>
+</ul>
+</div>
+</div>
+</footer>
+</body></html>
