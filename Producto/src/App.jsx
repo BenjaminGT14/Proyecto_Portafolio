@@ -1,120 +1,105 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { AppLayout } from '@/components/layout/AppLayout'
+import { AdminLayout } from '@/components/layout/AdminLayout'
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+
+// Rutas eager (núcleo de la app)
+import { HomePage } from '@/pages/Home'
+import { LugaresPage } from '@/pages/Lugares'
+import { LugarDetallePage } from '@/pages/LugarDetalle'
+import { EventosPage } from '@/pages/Eventos'
+import { EventoDetallePage } from '@/pages/EventoDetalle'
+import { MapaPage } from '@/pages/Mapa'
+import { FavoritosPage } from '@/pages/Favoritos'
+import { PerfilPage, NotFoundPage } from '@/pages/Placeholder'
+
+// Rutas lazy (auth + admin, menos frecuentes)
+const LoginPage = lazy(() =>
+  import('@/pages/auth/Login').then((m) => ({ default: m.LoginPage })),
+)
+const RegistroPage = lazy(() =>
+  import('@/pages/auth/Registro').then((m) => ({ default: m.RegistroPage })),
+)
+const RecuperarPasswordPage = lazy(() =>
+  import('@/pages/auth/RecuperarPassword').then((m) => ({ default: m.RecuperarPasswordPage })),
+)
+const AdminDashboardPage = lazy(() =>
+  import('@/pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboardPage })),
+)
+const AdminLugaresPage = lazy(() =>
+  import('@/pages/admin/AdminLugares').then((m) => ({ default: m.AdminLugaresPage })),
+)
+const AdminEventosPage = lazy(() =>
+  import('@/pages/admin/AdminEventos').then((m) => ({ default: m.AdminEventosPage })),
+)
+const AdminResenasPage = lazy(() =>
+  import('@/pages/admin/AdminResenas').then((m) => ({ default: m.AdminResenasPage })),
+)
+
+function PageFallback() {
+  return (
+    <div className="flex h-64 items-center justify-center text-sm text-outline">
+      Cargando…
+    </div>
+  )
+}
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <AuthProvider>
+      <BrowserRouter>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            {/* ---- Sitio público ---- */}
+            <Route element={<AppLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="lugares" element={<LugaresPage />} />
+              <Route path="lugares/:id" element={<LugarDetallePage />} />
+              <Route path="eventos" element={<EventosPage />} />
+              <Route path="eventos/:id" element={<EventoDetallePage />} />
+              <Route path="mapa" element={<MapaPage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="registro" element={<RegistroPage />} />
+              <Route path="recuperar-password" element={<RecuperarPasswordPage />} />
+              <Route
+                path="favoritos"
+                element={
+                  <ProtectedRoute>
+                    <FavoritosPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="perfil"
+                element={
+                  <ProtectedRoute>
+                    <PerfilPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+            {/* ---- Panel de administración ---- */}
+            <Route
+              path="admin"
+              element={
+                <ProtectedRoute adminOnly>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="lugares" element={<AdminLugaresPage />} />
+              <Route path="eventos" element={<AdminEventosPage />} />
+              <Route path="resenas" element={<AdminResenasPage />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
 
