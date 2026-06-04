@@ -1,7 +1,7 @@
 import { Icon } from '@/view/components/ui/Icon'
 import { formatFecha } from '@/core/utils'
 import { useAdminEventosViewModel } from '@/viewmodel/admin/useAdminEventosViewModel'
-import { Modal, TableSkeleton } from './AdminLugares'
+import { ErrorAlert, Modal, TableSkeleton } from './AdminLugares'
 
 export function AdminEventosPage() {
   const vm = useAdminEventosViewModel()
@@ -136,6 +136,7 @@ export function AdminEventosPage() {
               <input type="url" aria-label="URL de imagen" value={vm.form.imagen_url}
                 onChange={(e) => vm.setField('imagen_url', e.target.value)} className={INPUT_CLS} />
             </Field>
+            {vm.error && <ErrorAlert message={vm.error} />}
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => vm.setModal(null)}
                 className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high">
@@ -155,6 +156,7 @@ export function AdminEventosPage() {
           <p className="text-sm text-on-surface-variant">
             ¿Seguro que deseas eliminar <strong>{vm.confirmDelete.nombre}</strong>?
           </p>
+          {vm.error && <ErrorAlert message={vm.error} className="mt-4" />}
           <div className="mt-6 flex justify-end gap-3">
             <button type="button" onClick={() => vm.setConfirmDelete(null)}
               className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high">

@@ -7,13 +7,6 @@ export const categoriasMock = [
   { id_categoria: 'cat-iglesia', nombre: 'Iglesias y patrimonio', icono: 'church' },
 ]
 
-export const comunasSantiago = [
-  'Santiago', 'Providencia', 'Las Condes', 'Ñuñoa', 'La Reina',
-  'Vitacura', 'Maipú', 'La Florida', 'Puente Alto', 'San Miguel',
-  'Recoleta', 'Independencia', 'Estación Central', 'Cerrillos', 'Macul',
-  'Peñalolén', 'Lo Barnechea', 'Quilicura', 'Huechuraba', 'Renca',
-]
-
 // Lugares enriquecidos con datos de Wikipedia en español + imágenes de Wikimedia Commons.
 // Fuente: https://es.wikipedia.org/api/rest_v1/page/summary/<slug>
 // Para regenerar: `npm run fetch:wikipedia` (ver scripts/fetch-wikipedia-lugares.mjs).

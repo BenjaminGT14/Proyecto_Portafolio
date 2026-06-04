@@ -1,56 +1,25 @@
 import { supabase, isSupabaseConfigured } from '@/core/supabase'
-import {
-  categoriasMock,
-  lugaresMock,
-  eventosMock,
-  resenasMock,
-  votosMock,
-  usuariosMock,
-} from './mockData'
 
-// === Estado mutable para el modo mock ============================
-const resenasState = [...resenasMock]
-const votosState = [...votosMock]
-const lugaresState = lugaresMock.map((l) => ({ ...l }))
-const eventosState = eventosMock.map((e) => ({ ...e }))
-const favoritosState = [] // [{ id_favorito, id_usuario, id_lugar?, id_evento? }]
-
-function genId(prefix) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`
+// En modo demo (sin Supabase) toda la lógica vive en mockRepository, que se
+// importa de forma perezosa para que ni esa lógica ni los datos de mockData
+// viajen en el bundle de producción (donde isSupabaseConfigured siempre es true).
+let mockPromise
+function getMock() {
+  if (!mockPromise) mockPromise = import('./mockRepository')
+  return mockPromise
 }
 
-function buscarUsuarioMock(id) {
-  return usuariosMock.find((u) => u.id_usuario === id) ?? null
-}
-
-function agregarConteo(resena) {
-  const votos = votosState.filter((v) => v.id_resena === resena.id_resena)
-  const positivos = votos.filter((v) => v.es_positivo).length
-  const negativos = votos.length - positivos
-  return {
-    ...resena,
-    votos_positivos: positivos,
-    votos_negativos: negativos,
-    score: positivos - negativos,
-    autor: buscarUsuarioMock(resena.id_usuario),
-  }
-}
-
-function enriquecerLugar(lugar) {
-  if (!lugar) return null
-  const categoria = categoriasMock.find((c) => c.id_categoria === lugar.id_categoria)
-  return { ...lugar, categoria }
-}
-
-function enriquecerEvento(evento) {
-  if (!evento) return null
-  const lugar = lugaresState.find((l) => l.id_lugar === evento.id_lugar)
-  return { ...evento, lugar: lugar ?? evento.lugar ?? null }
+// Neutraliza los caracteres con significado en la gramática de filtros de
+// PostgREST (.or()): coma separa condiciones, paréntesis agrupan, y el
+// backslash/porcentaje afectan el patrón ilike. Evita que la búsqueda del
+// usuario pueda reescribir el filtro o apuntar a otras columnas.
+function sanitizarBusqueda(q) {
+  return String(q).replace(/[\\,()%]/g, ' ').trim()
 }
 
 // ---- categorías -------------------------------------
 export async function listarCategorias() {
-  if (!isSupabaseConfigured) return { data: categoriasMock, error: null }
+  if (!isSupabaseConfigured) return (await getMock()).listarCategorias()
   return supabase
     .from('categoria')
     .select('id_categoria, nombre, icono')
@@ -60,20 +29,7 @@ export async function listarCategorias() {
 // ---- lugares ----------------------------------------
 export async function listarLugares({ idCategoria, comuna, costo, q } = {}) {
   if (!isSupabaseConfigured) {
-    let data = lugaresState.map(enriquecerLugar)
-    if (idCategoria) data = data.filter((l) => l.id_categoria === idCategoria)
-    if (comuna) data = data.filter((l) => l.comuna === comuna)
-    if (costo === 'gratis') data = data.filter((l) => l.es_gratuito)
-    if (costo === 'pagado') data = data.filter((l) => !l.es_gratuito)
-    if (q) {
-      const needle = q.toLowerCase()
-      data = data.filter(
-        (l) =>
-          l.nombre.toLowerCase().includes(needle) ||
-          l.descripcion?.toLowerCase().includes(needle),
-      )
-    }
-    return { data, error: null }
+    return (await getMock()).listarLugares({ idCategoria, comuna, costo, q })
   }
 
   let query = supabase
@@ -85,7 +41,10 @@ export async function listarLugares({ idCategoria, comuna, costo, q } = {}) {
   if (comuna) query = query.eq('comuna', comuna)
   if (costo === 'gratis') query = query.eq('es_gratuito', true)
   if (costo === 'pagado') query = query.eq('es_gratuito', false)
-  if (q) query = query.or(`nombre.ilike.%${q}%,descripcion.ilike.%${q}%`)
+  if (q) {
+    const s = sanitizarBusqueda(q)
+    if (s) query = query.or(`nombre.ilike.%${s}%,descripcion.ilike.%${s}%`)
+  }
 
   return query
 }
@@ -93,31 +52,20 @@ export async function listarLugares({ idCategoria, comuna, costo, q } = {}) {
 // ---- eventos ----------------------------------------
 export async function listarEventos({ comuna, costo, q, desde } = {}) {
   if (!isSupabaseConfigured) {
-    let data = eventosState.map(enriquecerEvento)
-    if (comuna) data = data.filter((e) => e.lugar?.comuna === comuna)
-    if (costo === 'gratis') data = data.filter((e) => e.es_gratuito)
-    if (costo === 'pagado') data = data.filter((e) => !e.es_gratuito)
-    if (q) {
-      const needle = q.toLowerCase()
-      data = data.filter(
-        (e) =>
-          e.nombre.toLowerCase().includes(needle) ||
-          e.descripcion?.toLowerCase().includes(needle),
-      )
-    }
-    if (desde) data = data.filter((e) => new Date(e.fecha_inicio) >= new Date(desde))
-    data.sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio))
-    return { data, error: null }
+    return (await getMock()).listarEventos({ comuna, costo, q, desde })
   }
 
   let query = supabase
     .from('evento')
-    .select('*, lugar:id_lugar (id_lugar, nombre, comuna)')
+    .select('*, lugar:id_lugar (id_lugar, nombre, comuna, latitud, longitud)')
     .order('fecha_inicio', { ascending: true })
 
   if (costo === 'gratis') query = query.eq('es_gratuito', true)
   if (costo === 'pagado') query = query.eq('es_gratuito', false)
-  if (q) query = query.or(`nombre.ilike.%${q}%,descripcion.ilike.%${q}%`)
+  if (q) {
+    const s = sanitizarBusqueda(q)
+    if (s) query = query.or(`nombre.ilike.%${s}%,descripcion.ilike.%${s}%`)
+  }
   if (desde) query = query.gte('fecha_inicio', desde)
 
   const result = await query
@@ -132,10 +80,7 @@ export async function listarEventos({ comuna, costo, q, desde } = {}) {
 
 // ---- detalle de lugar -------------------------------
 export async function obtenerLugar(id) {
-  if (!isSupabaseConfigured) {
-    const lugar = lugaresState.find((l) => l.id_lugar === id)
-    return { data: enriquecerLugar(lugar), error: lugar ? null : new Error('No encontrado') }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).obtenerLugar(id)
   return supabase
     .from('lugar')
     .select('*, categoria:id_categoria (id_categoria, nombre, icono)')
@@ -145,10 +90,7 @@ export async function obtenerLugar(id) {
 
 // ---- detalle de evento ------------------------------
 export async function obtenerEvento(id) {
-  if (!isSupabaseConfigured) {
-    const evento = eventosState.find((e) => e.id_evento === id)
-    return { data: enriquecerEvento(evento), error: evento ? null : new Error('No encontrado') }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).obtenerEvento(id)
   return supabase
     .from('evento')
     .select(
@@ -164,16 +106,7 @@ export async function listarResenas({ idLugar, idEvento } = {}) {
     return { data: [], error: new Error('idLugar o idEvento requerido') }
   }
 
-  if (!isSupabaseConfigured) {
-    const data = resenasState
-      .flatMap((r) => {
-        if (r.estado !== 'visible') return []
-        const coincide = idLugar ? r.id_lugar === idLugar : r.id_evento === idEvento
-        return coincide ? [agregarConteo(r)] : []
-      })
-      .sort((a, b) => b.score - a.score || new Date(b.created_at) - new Date(a.created_at))
-    return { data, error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).listarResenas({ idLugar, idEvento })
 
   // Supabase: leer de la vista resena_con_votos para tener el conteo agregado.
   let query = supabase
@@ -203,19 +136,14 @@ export async function publicarResena({
   }
 
   if (!isSupabaseConfigured) {
-    const nueva = {
-      id_resena: genId('r'),
-      id_usuario: idUsuario,
-      id_lugar: idLugar,
-      id_evento: idEvento,
+    return (await getMock()).publicarResena({
+      idUsuario,
+      idLugar,
+      idEvento,
       titulo,
       contenido,
       puntuacion,
-      estado: 'visible',
-      created_at: new Date().toISOString(),
-    }
-    resenasState.unshift(nueva)
-    return { data: agregarConteo(nueva), error: null }
+    })
   }
 
   return supabase
@@ -236,27 +164,7 @@ export async function votarResena({ idUsuario, idResena, esPositivo }) {
   if (!idUsuario) return { data: null, error: new Error('Debes iniciar sesión') }
 
   if (!isSupabaseConfigured) {
-    const existente = votosState.find(
-      (v) => v.id_resena === idResena && v.id_usuario === idUsuario,
-    )
-    if (existente) {
-      if (existente.es_positivo === esPositivo) {
-        // toggle: quitar el voto
-        const idx = votosState.indexOf(existente)
-        votosState.splice(idx, 1)
-        return { data: null, error: null }
-      }
-      existente.es_positivo = esPositivo
-      return { data: existente, error: null }
-    }
-    const nuevo = {
-      id_voto: genId('v'),
-      id_usuario: idUsuario,
-      id_resena: idResena,
-      es_positivo: esPositivo,
-    }
-    votosState.push(nuevo)
-    return { data: nuevo, error: null }
+    return (await getMock()).votarResena({ idUsuario, idResena, esPositivo })
   }
 
   // Supabase: upsert sobre (id_usuario, id_resena). Si vuelve a votar
@@ -286,10 +194,7 @@ export async function obtenerVotosUsuario({ idUsuario, idsResenas }) {
   if (!idUsuario || !idsResenas?.length) return { data: [], error: null }
 
   if (!isSupabaseConfigured) {
-    const data = votosState.filter(
-      (v) => v.id_usuario === idUsuario && idsResenas.includes(v.id_resena),
-    )
-    return { data, error: null }
+    return (await getMock()).obtenerVotosUsuario({ idUsuario, idsResenas })
   }
 
   return supabase
@@ -303,20 +208,7 @@ export async function obtenerVotosUsuario({ idUsuario, idsResenas }) {
 export async function listarFavoritos({ idUsuario }) {
   if (!idUsuario) return { data: [], error: null }
 
-  if (!isSupabaseConfigured) {
-    const favs = favoritosState.filter((f) => f.id_usuario === idUsuario)
-    const lugares = favs.flatMap((f) => {
-      if (!f.id_lugar) return []
-      const lugar = enriquecerLugar(lugaresState.find((l) => l.id_lugar === f.id_lugar))
-      return lugar ? [lugar] : []
-    })
-    const eventos = favs.flatMap((f) => {
-      if (!f.id_evento) return []
-      const evento = enriquecerEvento(eventosState.find((e) => e.id_evento === f.id_evento))
-      return evento ? [evento] : []
-    })
-    return { data: { lugares, eventos }, error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).listarFavoritos({ idUsuario })
 
   const [{ data: lugares }, { data: eventos }] = await Promise.all([
     supabase
@@ -344,46 +236,32 @@ export async function obtenerEstadoFavoritos({ idUsuario, idLugares = [], idEven
   if (!idUsuario) return { data: { lugares: new Set(), eventos: new Set() }, error: null }
 
   if (!isSupabaseConfigured) {
-    const lugares = new Set(
-      favoritosState.flatMap((f) =>
-        f.id_usuario === idUsuario && idLugares.includes(f.id_lugar) ? [f.id_lugar] : [],
-      ),
-    )
-    const eventos = new Set(
-      favoritosState.flatMap((f) =>
-        f.id_usuario === idUsuario && idEventos.includes(f.id_evento) ? [f.id_evento] : [],
-      ),
-    )
-    return { data: { lugares, eventos }, error: null }
+    return (await getMock()).obtenerEstadoFavoritos({ idUsuario, idLugares, idEventos })
   }
 
-  const queries = []
-  if (idLugares.length) {
-    queries.push(
-      supabase
-        .from('favorito')
-        .select('id_lugar')
-        .eq('id_usuario', idUsuario)
-        .in('id_lugar', idLugares),
-    )
-  }
-  if (idEventos.length) {
-    queries.push(
-      supabase
-        .from('favorito')
-        .select('id_evento')
-        .eq('id_usuario', idUsuario)
-        .in('id_evento', idEventos),
-    )
-  }
-  const results = await Promise.all(queries)
+  // Cada consulta se nombra explícitamente para no acoplar el resultado a la
+  // posición dentro de un array (que dependía de cuántos filtros venían).
+  const [resLugares, resEventos] = await Promise.all([
+    idLugares.length
+      ? supabase
+          .from('favorito')
+          .select('id_lugar')
+          .eq('id_usuario', idUsuario)
+          .in('id_lugar', idLugares)
+      : Promise.resolve({ data: [] }),
+    idEventos.length
+      ? supabase
+          .from('favorito')
+          .select('id_evento')
+          .eq('id_usuario', idUsuario)
+          .in('id_evento', idEventos)
+      : Promise.resolve({ data: [] }),
+  ])
   const lugares = new Set(
-    (results[0]?.data ?? []).flatMap((r) => (r.id_lugar ? [r.id_lugar] : [])),
+    (resLugares.data ?? []).flatMap((r) => (r.id_lugar ? [r.id_lugar] : [])),
   )
   const eventos = new Set(
-    (results[idLugares.length ? 1 : 0]?.data ?? []).flatMap((r) =>
-      r.id_evento ? [r.id_evento] : [],
-    ),
+    (resEventos.data ?? []).flatMap((r) => (r.id_evento ? [r.id_evento] : [])),
   )
   return { data: { lugares, eventos }, error: null }
 }
@@ -395,22 +273,7 @@ export async function toggleFavorito({ idUsuario, idLugar = null, idEvento = nul
   }
 
   if (!isSupabaseConfigured) {
-    const idx = favoritosState.findIndex(
-      (f) =>
-        f.id_usuario === idUsuario &&
-        ((idLugar && f.id_lugar === idLugar) || (idEvento && f.id_evento === idEvento)),
-    )
-    if (idx >= 0) {
-      favoritosState.splice(idx, 1)
-      return { data: { activo: false }, error: null }
-    }
-    favoritosState.push({
-      id_favorito: genId('fav'),
-      id_usuario: idUsuario,
-      id_lugar: idLugar,
-      id_evento: idEvento,
-    })
-    return { data: { activo: true }, error: null }
+    return (await getMock()).toggleFavorito({ idUsuario, idLugar, idEvento })
   }
 
   const filtro = idLugar
@@ -460,85 +323,39 @@ async function callAdmin(fn, method, path = '', body = null) {
 
 // ---- admin: lugares ---------------------------------
 export async function crearLugar(input) {
-  if (!isSupabaseConfigured) {
-    const nuevo = {
-      id_lugar: genId('lugar'),
-      created_at: new Date().toISOString(),
-      es_gratuito: true,
-      ...input,
-    }
-    lugaresState.unshift(nuevo)
-    return { data: enriquecerLugar(nuevo), error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).crearLugar(input)
   return callAdmin('admin-lugares', 'POST', '', input)
 }
 
 export async function actualizarLugar(id, input) {
-  if (!isSupabaseConfigured) {
-    const idx = lugaresState.findIndex((l) => l.id_lugar === id)
-    if (idx < 0) return { data: null, error: new Error('No encontrado') }
-    lugaresState[idx] = { ...lugaresState[idx], ...input }
-    return { data: enriquecerLugar(lugaresState[idx]), error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).actualizarLugar(id, input)
   return callAdmin('admin-lugares', 'PUT', `/${id}`, input)
 }
 
 export async function eliminarLugar(id) {
-  if (!isSupabaseConfigured) {
-    const idx = lugaresState.findIndex((l) => l.id_lugar === id)
-    if (idx < 0) return { error: new Error('No encontrado') }
-    lugaresState.splice(idx, 1)
-    return { error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).eliminarLugar(id)
   return callAdmin('admin-lugares', 'DELETE', `/${id}`)
 }
 
 // ---- admin: eventos ---------------------------------
 export async function crearEvento(input) {
-  if (!isSupabaseConfigured) {
-    const nuevo = {
-      id_evento: genId('evento'),
-      created_at: new Date().toISOString(),
-      es_gratuito: true,
-      ...input,
-    }
-    eventosState.unshift(nuevo)
-    return { data: enriquecerEvento(nuevo), error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).crearEvento(input)
   return callAdmin('admin-eventos', 'POST', '', input)
 }
 
 export async function actualizarEvento(id, input) {
-  if (!isSupabaseConfigured) {
-    const idx = eventosState.findIndex((e) => e.id_evento === id)
-    if (idx < 0) return { data: null, error: new Error('No encontrado') }
-    eventosState[idx] = { ...eventosState[idx], ...input }
-    return { data: enriquecerEvento(eventosState[idx]), error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).actualizarEvento(id, input)
   return callAdmin('admin-eventos', 'PUT', `/${id}`, input)
 }
 
 export async function eliminarEvento(id) {
-  if (!isSupabaseConfigured) {
-    const idx = eventosState.findIndex((e) => e.id_evento === id)
-    if (idx < 0) return { error: new Error('No encontrado') }
-    eventosState.splice(idx, 1)
-    return { error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).eliminarEvento(id)
   return callAdmin('admin-eventos', 'DELETE', `/${id}`)
 }
 
 // ---- admin: moderación de reseñas -------------------
 export async function listarResenasAdmin() {
-  if (!isSupabaseConfigured) {
-    const data = resenasState.map((r) => ({
-      ...agregarConteo(r),
-      lugar: r.id_lugar ? lugaresState.find((l) => l.id_lugar === r.id_lugar) : null,
-      evento: r.id_evento ? eventosState.find((e) => e.id_evento === r.id_evento) : null,
-    }))
-    data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    return { data, error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).listarResenasAdmin()
   return callAdmin('admin-resenas', 'GET')
 }
 
@@ -546,11 +363,6 @@ export async function cambiarEstadoResena({ idResena, estado }) {
   if (!['visible', 'oculta', 'eliminada'].includes(estado)) {
     return { data: null, error: new Error('Estado inválido') }
   }
-  if (!isSupabaseConfigured) {
-    const r = resenasState.find((x) => x.id_resena === idResena)
-    if (!r) return { data: null, error: new Error('No encontrada') }
-    r.estado = estado
-    return { data: r, error: null }
-  }
+  if (!isSupabaseConfigured) return (await getMock()).cambiarEstadoResena({ idResena, estado })
   return callAdmin('admin-resenas', 'PATCH', `/${idResena}`, { estado })
 }

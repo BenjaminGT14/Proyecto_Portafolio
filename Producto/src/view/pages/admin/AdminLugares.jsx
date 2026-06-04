@@ -1,4 +1,5 @@
 import { Icon } from '@/view/components/ui/Icon'
+import { cn } from '@/core/utils'
 import { useAdminLugaresViewModel } from '@/viewmodel/admin/useAdminLugaresViewModel'
 
 export function AdminLugaresPage() {
@@ -147,6 +148,7 @@ export function AdminLugaresPage() {
               <input type="url" aria-label="URL de imagen" value={vm.form.imagen_url}
                 onChange={(e) => vm.setField('imagen_url', e.target.value)} className={INPUT_CLS} />
             </Field>
+            {vm.error && <ErrorAlert message={vm.error} />}
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => vm.setModal(null)}
                 className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high">
@@ -167,6 +169,7 @@ export function AdminLugaresPage() {
           <p className="text-sm text-on-surface-variant">
             ¿Seguro que deseas eliminar <strong>{vm.confirmDelete.nombre}</strong>? Esta acción no se puede deshacer.
           </p>
+          {vm.error && <ErrorAlert message={vm.error} className="mt-4" />}
           <div className="mt-6 flex justify-end gap-3">
             <button type="button" onClick={() => vm.setConfirmDelete(null)}
               className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high">
@@ -211,6 +214,20 @@ export function Modal({ title, onClose, children }) {
         </div>
         <div className="p-6">{children}</div>
       </div>
+    </div>
+  )
+}
+
+export function ErrorAlert({ message, className }) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'rounded-lg border border-error-container bg-error-container px-3 py-2 text-sm text-on-error-container',
+        className,
+      )}
+    >
+      {message}
     </div>
   )
 }

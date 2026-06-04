@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import {
   actualizarEvento,
   crearEvento,
@@ -7,6 +7,7 @@ import {
   listarLugares,
 } from '@/model/entretecaRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
+import { useAdminCrud } from './useAdminCrud'
 
 const EMPTY_FORM = {
   nombre: '',
@@ -43,66 +44,24 @@ function buildPayload(form) {
 }
 
 export function useAdminEventosViewModel() {
-  const [refresh, setRefresh] = useState(0)
-  const bump = useCallback(() => setRefresh((n) => n + 1), [])
-  const cargarEventos = useCallback(() => listarEventos(), [])
+  const crud = useAdminCrud({
+    listar: listarEventos,
+    crear: crearEvento,
+    actualizar: actualizarEvento,
+    eliminar: eliminarEvento,
+    emptyForm: EMPTY_FORM,
+    mapToForm: mapEventoToForm,
+    buildPayload,
+    idKey: 'id_evento',
+    entidadLabel: 'el evento',
+  })
+
   const cargarLugares = useCallback(() => listarLugares(), [])
-  const { data: eventos, loading } = useAsyncData(cargarEventos, refresh)
   const { data: lugares } = useAsyncData(cargarLugares)
-  const [modal, setModal] = useState(null)
-  const [confirmDelete, setConfirmDelete] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState(EMPTY_FORM)
-
-  function abrirCrear() {
-    setForm(EMPTY_FORM)
-    setModal({ modo: 'crear' })
-  }
-
-  function abrirEditar(evento) {
-    setForm(mapEventoToForm(evento))
-    setModal({ modo: 'editar', evento })
-  }
-
-  function setField(key, value) {
-    setForm((prev) => ({ ...prev, [key]: value }))
-  }
-
-  async function handleGuardar(e) {
-    e.preventDefault()
-    setSaving(true)
-    const payload = buildPayload(form)
-    if (modal.modo === 'crear') {
-      await crearEvento(payload)
-    } else {
-      await actualizarEvento(modal.evento.id_evento, payload)
-    }
-    setSaving(false)
-    setModal(null)
-    bump()
-  }
-
-  async function handleEliminar() {
-    if (!confirmDelete) return
-    await eliminarEvento(confirmDelete.id_evento)
-    setConfirmDelete(null)
-    bump()
-  }
 
   return {
-    eventos: eventos ?? [],
+    ...crud,
+    eventos: crud.items,
     lugares: lugares ?? [],
-    loading,
-    modal,
-    setModal,
-    confirmDelete,
-    setConfirmDelete,
-    saving,
-    form,
-    abrirCrear,
-    abrirEditar,
-    setField,
-    handleGuardar,
-    handleEliminar,
   }
 }

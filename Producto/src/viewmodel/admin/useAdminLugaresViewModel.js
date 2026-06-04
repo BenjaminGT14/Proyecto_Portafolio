@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import {
   actualizarLugar,
   crearLugar,
@@ -6,8 +6,9 @@ import {
   listarCategorias,
   listarLugares,
 } from '@/model/entretecaRepository'
-import { comunasSantiago } from '@/model/mockData'
+import { comunasSantiago } from '@/model/comunas'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
+import { useAdminCrud } from './useAdminCrud'
 
 const EMPTY_FORM = {
   nombre: '',
@@ -50,67 +51,25 @@ function buildPayload(form) {
 }
 
 export function useAdminLugaresViewModel() {
-  const [refresh, setRefresh] = useState(0)
-  const bump = useCallback(() => setRefresh((n) => n + 1), [])
-  const cargarLugares = useCallback(() => listarLugares(), [])
+  const crud = useAdminCrud({
+    listar: listarLugares,
+    crear: crearLugar,
+    actualizar: actualizarLugar,
+    eliminar: eliminarLugar,
+    emptyForm: EMPTY_FORM,
+    mapToForm: mapLugarToForm,
+    buildPayload,
+    idKey: 'id_lugar',
+    entidadLabel: 'el lugar',
+  })
+
   const cargarCategorias = useCallback(() => listarCategorias(), [])
-  const { data: lugares, loading } = useAsyncData(cargarLugares, refresh)
   const { data: categorias } = useAsyncData(cargarCategorias)
-  const [modal, setModal] = useState(null)
-  const [confirmDelete, setConfirmDelete] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState(EMPTY_FORM)
-
-  function abrirCrear() {
-    setForm(EMPTY_FORM)
-    setModal({ modo: 'crear' })
-  }
-
-  function abrirEditar(lugar) {
-    setForm(mapLugarToForm(lugar))
-    setModal({ modo: 'editar', lugar })
-  }
-
-  function setField(key, value) {
-    setForm((prev) => ({ ...prev, [key]: value }))
-  }
-
-  async function handleGuardar(e) {
-    e.preventDefault()
-    setSaving(true)
-    const payload = buildPayload(form)
-    if (modal.modo === 'crear') {
-      await crearLugar(payload)
-    } else {
-      await actualizarLugar(modal.lugar.id_lugar, payload)
-    }
-    setSaving(false)
-    setModal(null)
-    bump()
-  }
-
-  async function handleEliminar() {
-    if (!confirmDelete) return
-    await eliminarLugar(confirmDelete.id_lugar)
-    setConfirmDelete(null)
-    bump()
-  }
 
   return {
-    lugares: lugares ?? [],
+    ...crud,
+    lugares: crud.items,
     categorias: categorias ?? [],
     comunas: comunasSantiago,
-    loading,
-    modal,
-    setModal,
-    confirmDelete,
-    setConfirmDelete,
-    saving,
-    form,
-    abrirCrear,
-    abrirEditar,
-    setField,
-    handleGuardar,
-    handleEliminar,
   }
 }
