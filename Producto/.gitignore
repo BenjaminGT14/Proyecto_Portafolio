@@ -15,6 +15,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+.agents
+.claude
+skills-lock.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

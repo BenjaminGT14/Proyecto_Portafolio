@@ -26,6 +26,9 @@ const RegistroPage = lazy(() =>
 const RecuperarPasswordPage = lazy(() =>
   import('@/view/pages/auth/RecuperarPassword').then((m) => ({ default: m.RecuperarPasswordPage })),
 )
+const NuevaPasswordPage = lazy(() =>
+  import('@/view/pages/auth/NuevaPassword').then((m) => ({ default: m.NuevaPasswordPage })),
+)
 const AdminDashboardPage = lazy(() =>
   import('@/view/pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboardPage })),
 )
@@ -64,6 +67,7 @@ function App() {
               <Route path="login" element={<LoginPage />} />
               <Route path="registro" element={<RegistroPage />} />
               <Route path="recuperar-password" element={<RecuperarPasswordPage />} />
+              <Route path="recuperar-password/nueva" element={<NuevaPasswordPage />} />
               <Route
                 path="favoritos"
                 element={

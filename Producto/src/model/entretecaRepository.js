@@ -85,7 +85,7 @@ export async function listarLugares({ idCategoria, comuna, costo, q } = {}) {
   if (comuna) query = query.eq('comuna', comuna)
   if (costo === 'gratis') query = query.eq('es_gratuito', true)
   if (costo === 'pagado') query = query.eq('es_gratuito', false)
-  if (q) query = query.ilike('nombre', `%${q}%`)
+  if (q) query = query.or(`nombre.ilike.%${q}%,descripcion.ilike.%${q}%`)
 
   return query
 }
@@ -117,7 +117,7 @@ export async function listarEventos({ comuna, costo, q, desde } = {}) {
 
   if (costo === 'gratis') query = query.eq('es_gratuito', true)
   if (costo === 'pagado') query = query.eq('es_gratuito', false)
-  if (q) query = query.ilike('nombre', `%${q}%`)
+  if (q) query = query.or(`nombre.ilike.%${q}%,descripcion.ilike.%${q}%`)
   if (desde) query = query.gte('fecha_inicio', desde)
 
   const result = await query
@@ -431,6 +431,33 @@ export async function toggleFavorito({ idUsuario, idLugar = null, idEvento = nul
   return { data: { activo: true }, error: null }
 }
 
+// ---- helper: llamar edge functions admin -----------
+async function callAdmin(fn, method, path = '', body = null) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  if (!token) return { data: null, error: new Error('No autenticado') }
+
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fn}${path}`
+  let res
+  try {
+    res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: body != null ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    return { data: null, error: new Error('Error de red al contactar Edge Function') }
+  }
+  let json
+  try { json = await res.json() } catch { json = {} }
+  if (!res.ok) return { data: null, error: new Error(json.error ?? 'Error en Edge Function') }
+  return { data: json, error: null }
+}
+
 // ---- admin: lugares ---------------------------------
 export async function crearLugar(input) {
   if (!isSupabaseConfigured) {
@@ -443,7 +470,7 @@ export async function crearLugar(input) {
     lugaresState.unshift(nuevo)
     return { data: enriquecerLugar(nuevo), error: null }
   }
-  return supabase.from('lugar').insert(input).select().single()
+  return callAdmin('admin-lugares', 'POST', '', input)
 }
 
 export async function actualizarLugar(id, input) {
@@ -453,7 +480,7 @@ export async function actualizarLugar(id, input) {
     lugaresState[idx] = { ...lugaresState[idx], ...input }
     return { data: enriquecerLugar(lugaresState[idx]), error: null }
   }
-  return supabase.from('lugar').update(input).eq('id_lugar', id).select().single()
+  return callAdmin('admin-lugares', 'PUT', `/${id}`, input)
 }
 
 export async function eliminarLugar(id) {
@@ -463,7 +490,7 @@ export async function eliminarLugar(id) {
     lugaresState.splice(idx, 1)
     return { error: null }
   }
-  return supabase.from('lugar').delete().eq('id_lugar', id)
+  return callAdmin('admin-lugares', 'DELETE', `/${id}`)
 }
 
 // ---- admin: eventos ---------------------------------
@@ -478,7 +505,7 @@ export async function crearEvento(input) {
     eventosState.unshift(nuevo)
     return { data: enriquecerEvento(nuevo), error: null }
   }
-  return supabase.from('evento').insert(input).select().single()
+  return callAdmin('admin-eventos', 'POST', '', input)
 }
 
 export async function actualizarEvento(id, input) {
@@ -488,7 +515,7 @@ export async function actualizarEvento(id, input) {
     eventosState[idx] = { ...eventosState[idx], ...input }
     return { data: enriquecerEvento(eventosState[idx]), error: null }
   }
-  return supabase.from('evento').update(input).eq('id_evento', id).select().single()
+  return callAdmin('admin-eventos', 'PUT', `/${id}`, input)
 }
 
 export async function eliminarEvento(id) {
@@ -498,7 +525,7 @@ export async function eliminarEvento(id) {
     eventosState.splice(idx, 1)
     return { error: null }
   }
-  return supabase.from('evento').delete().eq('id_evento', id)
+  return callAdmin('admin-eventos', 'DELETE', `/${id}`)
 }
 
 // ---- admin: moderación de reseñas -------------------
@@ -512,12 +539,7 @@ export async function listarResenasAdmin() {
     data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     return { data, error: null }
   }
-  return supabase
-    .from('resena_con_votos')
-    .select(
-      '*, autor:id_usuario (nombre, avatar_url), lugar:id_lugar (id_lugar, nombre), evento:id_evento (id_evento, nombre)',
-    )
-    .order('created_at', { ascending: false })
+  return callAdmin('admin-resenas', 'GET')
 }
 
 export async function cambiarEstadoResena({ idResena, estado }) {
@@ -530,10 +552,5 @@ export async function cambiarEstadoResena({ idResena, estado }) {
     r.estado = estado
     return { data: r, error: null }
   }
-  return supabase
-    .from('resena')
-    .update({ estado })
-    .eq('id_resena', idResena)
-    .select()
-    .single()
+  return callAdmin('admin-resenas', 'PATCH', `/${idResena}`, { estado })
 }
