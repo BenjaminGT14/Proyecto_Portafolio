@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Leaflet: evita que el reset de Tailwind rompa los tiles del mapa */
+.leaflet-container img {
+  max-width: none;
+  display: inline;
+}
+/* Asegura que el z-index de popups y controles quede sobre el header fijo */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10;
+}
+.leaflet-popup-pane {
+  z-index: 20;
+}
+
 @theme {
   /* === Material 3 — paleta del mockup === */
   --color-surface: #fcf8fa;
