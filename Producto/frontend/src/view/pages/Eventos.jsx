@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom'
 import { EventoCard } from '@/view/components/EventoCard'
 import { FiltrosBar } from '@/view/components/FiltrosBar'
+import { Icon } from '@/view/components/ui/Icon'
 import { useEventosViewModel } from '@/viewmodel/public/useEventosViewModel'
 
 export function EventosPage() {
@@ -7,16 +9,25 @@ export function EventosPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end sm:gap-4">
+      <header className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Eventos en Santiago</h1>
           <p className="mt-1 text-sm text-slate-600">
             Lo que está pasando esta semana en la ciudad.
           </p>
         </div>
-        <p className="text-sm text-slate-500">
-          {vm.items.length} resultado{vm.items.length === 1 ? '' : 's'}
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-slate-500">
+            {vm.items.length} resultado{vm.items.length === 1 ? '' : 's'}
+          </p>
+          <Link
+            to="/eventos/proponer"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
+          >
+            <Icon name="add" size="sm" />
+            Proponer evento
+          </Link>
+        </div>
       </header>
 
       <FiltrosBar

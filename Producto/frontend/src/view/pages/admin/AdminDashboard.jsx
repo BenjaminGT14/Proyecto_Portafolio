@@ -32,7 +32,13 @@ export function AdminDashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon="place" label="Lugares" value={vm.lugares.length} to="/admin/lugares" />
-        <StatCard icon="event" label="Eventos" value={vm.eventos.length} to="/admin/eventos" />
+        <StatCard
+          icon="event"
+          label={vm.eventosPendientes ? `Eventos · ${vm.eventosPendientes} pendiente(s)` : 'Eventos'}
+          value={vm.eventos.length}
+          to="/admin/eventos"
+          color={vm.eventosPendientes ? 'text-tertiary' : 'text-secondary'}
+        />
         <StatCard icon="rate_review" label="Reseñas visibles" value={vm.visibles} to="/admin/resenas" />
         <StatCard
           icon="visibility_off"

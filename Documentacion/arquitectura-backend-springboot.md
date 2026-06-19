@@ -318,8 +318,51 @@ Opcional: crear `.env` con `VITE_API_URL=http://localhost:8080` (es el valor por
 
 ---
 
-## 14. Pendientes
+## 14. Feature: propuestas de eventos por usuarios
 
-1. **Flujo end-to-end en el navegador** (login, favoritos, reseñas, panel admin) — siguiente paso.
-2. **Configuración real de envío de correos** (SMTP) — se hará después.
-3. (Opcional) Mover el secret JWT y credenciales a variables de entorno para producción.
+Los usuarios autenticados pueden **proponer eventos**, que quedan **pendientes de
+aprobación** por un administrador antes de hacerse públicos. El formulario de propuesta es el
+**mismo** que usa el admin para crear eventos (componente compartido).
+
+### Modelo
+- `Evento` gana dos campos: `estado` (`EstadoEvento`: `PENDIENTE` / `APROBADO` / `RECHAZADO`)
+  y `propuestoPor` (`Usuario` que la propuso; null para eventos del admin).
+- Eventos creados por admin (y los sembrados) nacen **APROBADO**; las propuestas de usuarios
+  nacen **PENDIENTE**.
+
+### Reglas
+- El listado y el detalle **públicos** solo muestran eventos `APROBADO`.
+- Una propuesta solo se vuelve pública cuando el admin la **aprueba**.
+
+### Endpoints nuevos
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| POST | `/eventos/propuestas` | autenticado | Propone un evento (queda PENDIENTE). Mismo payload que el alta admin. |
+| GET | `/admin/eventos` | admin | Lista todos los eventos; `?estado=pendiente` filtra propuestas. |
+| PATCH | `/admin/eventos/{id}/estado` | admin | Aprueba/rechaza (`{ "estado": "aprobado" | "rechazado" }`). |
+
+> Nota técnica: el `estado` como **query param** se recibe como `String` y se convierte con
+> `EstadoEvento.from()` (la conversión por defecto de Spring para enums es por nombre de
+> constante y no aceptaría el valor en minúsculas; el `@JsonCreator` solo aplica al body).
+
+### Frontend
+- **`EventoFormFields`** (nuevo componente): los campos del formulario de evento, reutilizados
+  por el panel admin (alta/edición en modal) y por la página pública de propuesta.
+- **Página `/eventos/proponer`** (`ProponerEvento`, ruta protegida): formulario + confirmación
+  "tu propuesta quedó pendiente de aprobación".
+- **Botón "Proponer evento"** en la página de Eventos.
+- **Panel admin de Eventos**: sección "Propuestas pendientes de aprobación" con botones
+  **Aprobar / Rechazar**, badges de estado en la tabla y conteo de pendientes en el dashboard.
+- El repositorio suma `proponerEvento`, `listarEventosAdmin(estado?)` y
+  `cambiarEstadoEvento({ idEvento, estado })`.
+
+Verificado end-to-end (navegador): usuario propone → no aparece en público → admin la ve en
+"pendientes" → aprueba → aparece en público.
+
+---
+
+## 15. Pendientes
+
+1. **Configuración real de envío de correos** (SMTP) — se hará después.
+2. (Opcional) Mover el secret JWT y credenciales a variables de entorno para producción.
+3. (Opcional) Vista "mis propuestas" para que el usuario siga el estado de lo que propuso.
