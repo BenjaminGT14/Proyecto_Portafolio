@@ -1,94 +1,81 @@
 import { useEffect, useState, useCallback } from 'react'
-import { supabase, isSupabaseConfigured } from '@/core/supabase'
+import { apiFetch, getToken, setToken, clearToken } from '@/core/api'
 import { AuthContext } from './authContextObject'
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
-  // Sin Supabase configurado no hay nada que cargar: el estado inicial ya es
-  // "no cargando". Así evitamos inicializar este estado desde un efecto.
-  const [loading, setLoading] = useState(isSupabaseConfigured)
+  // Si hay token guardado, arrancamos en "cargando" hasta validar con /auth/me.
+  const [loading, setLoading] = useState(Boolean(getToken()))
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return
-
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    if (!getToken()) return
+    let cancelled = false
+    apiFetch('/auth/me').then(({ data, error }) => {
+      if (cancelled) return
+      if (error || !data) {
+        clearToken()
+        setProfile(null)
+      } else {
+        setProfile(data)
+      }
       setLoading(false)
     })
-
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession)
-    })
-
-    return () => subscription.subscription.unsubscribe()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  const userId = session?.user?.id
-  useEffect(() => {
-    if (!userId || !isSupabaseConfigured) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setProfile(null)
-      return
-    }
-    supabase
-      .from('usuario')
-      .select('*')
-      .eq('id_usuario', userId)
-      .maybeSingle()
-      .then(({ data }) => setProfile(data))
-  }, [userId])
-
   const signUp = useCallback(async ({ email, password, nombre }) => {
-    return supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { nombre } },
+    const { data, error } = await apiFetch('/auth/register', {
+      method: 'POST',
+      body: { email, password, nombre },
     })
+    if (error) return { data: null, error }
+    setToken(data.token)
+    setProfile(data.usuario)
+    // session truthy => el viewmodel de registro navega directo al home (auto-login).
+    return { data: { session: true, usuario: data.usuario }, error: null }
   }, [])
 
   const signIn = useCallback(async ({ email, password }) => {
-    return supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: { email, password },
+    })
+    if (error) return { data: null, error }
+    setToken(data.token)
+    setProfile(data.usuario)
+    return { data: { session: true, usuario: data.usuario }, error: null }
   }, [])
 
   const signOut = useCallback(async () => {
-    return supabase.auth.signOut()
+    clearToken()
+    setProfile(null)
+    return { error: null }
   }, [])
 
   const resetPassword = useCallback(async ({ email }) => {
-    return supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/recuperar-password/nueva`,
-    })
+    return apiFetch('/auth/recuperar-password', { method: 'POST', body: { email } })
   }, [])
 
-  // En modo mock (sin Supabase) usamos un "usuario demo" para que el flujo
-  // de reseñas y votos sea demostrable end-to-end sin login real.
-  const demoUser = !isSupabaseConfigured
-    ? { id: 'u-demo', email: 'demo@entreteca.cl' }
-    : null
-  const demoProfile = !isSupabaseConfigured
-    ? {
-        id_usuario: 'u-demo',
-        nombre: 'Demo',
-        avatar_url: 'https://api.dicebear.com/9.x/initials/svg?seed=Demo&backgroundColor=c04f23&textColor=ffffff&radius=50',
-        rol: 'admin', // en modo demo tiene rol admin para que el panel sea testeable
-      }
-    : null
+  const nuevaPassword = useCallback(async ({ token, password }) => {
+    return apiFetch('/auth/nueva-password', { method: 'POST', body: { token, password } })
+  }, [])
 
-  const profileEfectivo = profile ?? demoProfile
+  const user = profile ? { id: profile.id_usuario, email: profile.email } : null
 
   const value = {
-    session,
-    user: session?.user ?? demoUser,
-    profile: profileEfectivo,
+    user,
+    profile,
     loading,
-    isAuthenticated: Boolean(session) || !isSupabaseConfigured,
-    isAdmin: profileEfectivo?.rol === 'admin',
-    isDemo: !isSupabaseConfigured,
+    isAuthenticated: Boolean(profile),
+    isAdmin: profile?.rol === 'admin',
+    isDemo: false,
     signUp,
     signIn,
     signOut,
     resetPassword,
+    nuevaPassword,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

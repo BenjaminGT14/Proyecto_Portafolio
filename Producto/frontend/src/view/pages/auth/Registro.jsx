@@ -2,9 +2,8 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/view/components/ui/Button'
 import { Input } from '@/view/components/ui/Input'
 import { Label } from '@/view/components/ui/Label'
-import { isSupabaseConfigured } from '@/core/supabase'
 import { useRegistroViewModel } from '@/viewmodel/auth/useRegistroViewModel'
-import { AuthLayout, ErrorBanner, SuccessBanner, SupabaseWarning } from './AuthShared'
+import { AuthLayout, ErrorBanner, SuccessBanner } from './AuthShared'
 
 export function RegistroPage() {
   const vm = useRegistroViewModel()
@@ -25,7 +24,6 @@ export function RegistroPage() {
 
   return (
     <AuthLayout title="Crear cuenta" subtitle="Únete a la comunidad de Entreteca">
-      {!isSupabaseConfigured && <SupabaseWarning />}
       <form onSubmit={vm.handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="nombre">Nombre</Label>

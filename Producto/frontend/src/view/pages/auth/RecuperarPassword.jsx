@@ -2,9 +2,8 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/view/components/ui/Button'
 import { Input } from '@/view/components/ui/Input'
 import { Label } from '@/view/components/ui/Label'
-import { isSupabaseConfigured } from '@/core/supabase'
 import { useRecuperarPasswordViewModel } from '@/viewmodel/auth/useRecuperarPasswordViewModel'
-import { AuthLayout, ErrorBanner, SuccessBanner, SupabaseWarning } from './AuthShared'
+import { AuthLayout, ErrorBanner, SuccessBanner } from './AuthShared'
 
 export function RecuperarPasswordPage() {
   const vm = useRecuperarPasswordViewModel()
@@ -14,8 +13,6 @@ export function RecuperarPasswordPage() {
       title="Recuperar contraseña"
       subtitle="Te enviamos un enlace al correo para restablecerla"
     >
-      {!isSupabaseConfigured && <SupabaseWarning />}
-
       {vm.sent ? (
         <SuccessBanner message={`Si existe una cuenta con ${vm.email}, recibirás un correo en unos minutos.`} />
       ) : (
