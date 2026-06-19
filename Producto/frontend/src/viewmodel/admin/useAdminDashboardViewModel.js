@@ -1,10 +1,10 @@
 import { useCallback } from 'react'
-import { listarEventos, listarLugares, listarResenasAdmin } from '@/model/entretecaRepository'
+import { listarEventosAdmin, listarLugares, listarResenasAdmin } from '@/model/entretecaRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
 export function useAdminDashboardViewModel() {
   const cargarLugares = useCallback(() => listarLugares(), [])
-  const cargarEventos = useCallback(() => listarEventos(), [])
+  const cargarEventos = useCallback(() => listarEventosAdmin(), [])
   const cargarResenas = useCallback(() => listarResenasAdmin(), [])
   const { data: lugares } = useAsyncData(cargarLugares)
   const { data: eventos } = useAsyncData(cargarEventos)
@@ -18,6 +18,7 @@ export function useAdminDashboardViewModel() {
     lugares: lugaresArr,
     eventos: eventosArr,
     resenas: resenasArr,
+    eventosPendientes: eventosArr.filter((e) => e.estado === 'pendiente').length,
     pendientes: resenasArr.filter((r) => r.estado !== 'visible').length,
     visibles: resenasArr.filter((r) => r.estado === 'visible').length,
   }

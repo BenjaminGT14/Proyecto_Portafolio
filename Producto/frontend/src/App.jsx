@@ -11,6 +11,7 @@ import { LugaresPage } from '@/view/pages/Lugares'
 import { LugarDetallePage } from '@/view/pages/LugarDetalle'
 import { EventosPage } from '@/view/pages/Eventos'
 import { EventoDetallePage } from '@/view/pages/EventoDetalle'
+import { ProponerEventoPage } from '@/view/pages/ProponerEvento'
 import { MapaPage } from '@/view/pages/Mapa'
 import { FavoritosPage } from '@/view/pages/Favoritos'
 import { PerfilPage } from '@/view/pages/Perfil'
@@ -62,6 +63,14 @@ function App() {
               <Route path="lugares" element={<LugaresPage />} />
               <Route path="lugares/:id" element={<LugarDetallePage />} />
               <Route path="eventos" element={<EventosPage />} />
+              <Route
+                path="eventos/proponer"
+                element={
+                  <ProtectedRoute>
+                    <ProponerEventoPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="eventos/:id" element={<EventoDetallePage />} />
               <Route path="mapa" element={<MapaPage />} />
               <Route path="login" element={<LoginPage />} />

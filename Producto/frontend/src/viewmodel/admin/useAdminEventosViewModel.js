@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react'
 import {
   actualizarEvento,
+  cambiarEstadoEvento,
   crearEvento,
   eliminarEvento,
-  listarEventos,
+  listarEventosAdmin,
   listarLugares,
 } from '@/model/entretecaRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
@@ -45,13 +46,14 @@ function buildPayload(form) {
 export function useAdminEventosViewModel() {
   const [refresh, setRefresh] = useState(0)
   const bump = useCallback(() => setRefresh((n) => n + 1), [])
-  const cargarEventos = useCallback(() => listarEventos(), [])
+  const cargarEventos = useCallback(() => listarEventosAdmin(), [])
   const cargarLugares = useCallback(() => listarLugares(), [])
   const { data: eventos, loading } = useAsyncData(cargarEventos, refresh)
   const { data: lugares } = useAsyncData(cargarLugares)
   const [modal, setModal] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [moderando, setModerando] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
 
   function abrirCrear() {
@@ -89,8 +91,18 @@ export function useAdminEventosViewModel() {
     bump()
   }
 
+  async function moderar(idEvento, estado) {
+    setModerando(idEvento)
+    await cambiarEstadoEvento({ idEvento, estado })
+    setModerando(null)
+    bump()
+  }
+
+  const registros = eventos ?? []
+
   return {
-    eventos: eventos ?? [],
+    eventos: registros,
+    pendientes: registros.filter((e) => e.estado === 'pendiente'),
     lugares: lugares ?? [],
     loading,
     modal,
@@ -98,11 +110,14 @@ export function useAdminEventosViewModel() {
     confirmDelete,
     setConfirmDelete,
     saving,
+    moderando,
     form,
     abrirCrear,
     abrirEditar,
     setField,
     handleGuardar,
     handleEliminar,
+    aprobar: (id) => moderar(id, 'aprobado'),
+    rechazar: (id) => moderar(id, 'rechazado'),
   }
 }
