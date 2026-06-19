@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '@/core/supabase'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '@/core/auth/useAuth'
 import { Button } from '@/view/components/ui/Button'
 import { Input } from '@/view/components/ui/Input'
 import { Label } from '@/view/components/ui/Label'
@@ -8,6 +8,10 @@ import { AuthLayout, ErrorBanner, SuccessBanner } from './AuthShared'
 
 export function NuevaPasswordPage() {
   const navigate = useNavigate()
+  const { nuevaPassword } = useAuth()
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token')
+
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,6 +21,10 @@ export function NuevaPasswordPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
+    if (!token) {
+      setError('El enlace de recuperación no es válido o está incompleto.')
+      return
+    }
     if (password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres.')
       return
@@ -26,7 +34,7 @@ export function NuevaPasswordPage() {
       return
     }
     setLoading(true)
-    const { error: updateError } = await supabase.auth.updateUser({ password })
+    const { error: updateError } = await nuevaPassword({ token, password })
     setLoading(false)
     if (updateError) {
       setError(updateError.message ?? 'No pudimos actualizar la contraseña')
@@ -40,6 +48,16 @@ export function NuevaPasswordPage() {
     <AuthLayout title="Nueva contraseña" subtitle="Elige una contraseña segura para tu cuenta">
       {done ? (
         <SuccessBanner message="Contraseña actualizada correctamente. Redirigiendo al ingreso…" />
+      ) : !token ? (
+        <>
+          <ErrorBanner message="Falta el token de recuperación. Solicita un nuevo enlace." />
+          <Link
+            to="/recuperar-password"
+            className="mt-6 inline-block text-sm font-medium text-secondary hover:underline"
+          >
+            Volver a solicitar enlace
+          </Link>
+        </>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">

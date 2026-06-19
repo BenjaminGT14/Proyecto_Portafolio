@@ -32,12 +32,3 @@ export function SuccessBanner({ message }) {
     </div>
   )
 }
-
-export function SupabaseWarning() {
-  return (
-    <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-      Supabase no está configurado. Copia <code>.env.example</code> a <code>.env.local</code> y
-      completa las credenciales para activar autenticación.
-    </div>
-  )
-}
