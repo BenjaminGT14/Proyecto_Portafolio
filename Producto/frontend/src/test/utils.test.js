@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatPrecio, imgPlaceholder } from './utils'
+import { formatPrecio, imgPlaceholder } from '@/core/utils'
 
 // CONCEPTO 1: probar funciones puras (entran datos, salen datos).
 // Son las pruebas más simples: no necesitan navegador ni componentes.
