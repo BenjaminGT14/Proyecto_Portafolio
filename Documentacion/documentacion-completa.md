@@ -1,29 +1,34 @@
 # Documentación Completa — Entreteca
 
-> Proyecto Final · Duoc UC 2026  
-> Stack: React 19 · Vite 8 · Tailwind CSS v4 · Supabase · Vercel
+> Proyecto Final · Duoc UC 2026
+> **Frontend:** React 19 · Vite 8 · Tailwind CSS v4
+> **Backend propio:** Spring Boot 3.5 · MySQL 8 · JWT
+>
+> Para el detalle técnico profundo del backend y de la migración desde Supabase,
+> ver [arquitectura-backend-springboot.md](arquitectura-backend-springboot.md).
+> Convenciones de trabajo del repo: ver [CLAUDE.md](../CLAUDE.md) en la raíz.
 
 ---
 
 ## Índice
 
 1. [¿Qué es Entreteca?](#1-qué-es-entreteca)
-2. [Herramientas y por qué se eligieron](#2-herramientas-y-por-qué-se-eligieron)
-3. [Estructura del proyecto](#3-estructura-del-proyecto)
-4. [Arquitectura MVVM](#4-arquitectura-mvvm)
-5. [Cómo React se conecta a Supabase](#5-cómo-react-se-conecta-a-supabase)
-6. [Autenticación — flujo completo](#6-autenticación--flujo-completo)
-7. [Confirmación de correo electrónico](#7-confirmación-de-correo-electrónico)
+2. [Arquitectura general](#2-arquitectura-general)
+3. [Herramientas y por qué se eligieron](#3-herramientas-y-por-qué-se-eligieron)
+4. [Estructura del proyecto](#4-estructura-del-proyecto)
+5. [Frontend — Arquitectura MVVM](#5-frontend--arquitectura-mvvm)
+6. [Cómo el frontend habla con el backend (`api.js`)](#6-cómo-el-frontend-habla-con-el-backend-apijs)
+7. [Autenticación — flujo completo (JWT)](#7-autenticación--flujo-completo-jwt)
 8. [Recuperación de contraseña](#8-recuperación-de-contraseña)
-9. [Base de datos — schema completo](#9-base-de-datos--schema-completo)
-10. [Row Level Security (RLS)](#10-row-level-security-rls)
-11. [Triggers y funciones SQL](#11-triggers-y-funciones-sql)
-12. [Edge Functions](#12-edge-functions)
-13. [Componentes React complejos](#13-componentes-react-complejos)
-14. [Routing y rutas protegidas](#14-routing-y-rutas-protegidas)
-15. [Variables de entorno](#15-variables-de-entorno)
-16. [Despliegue en Vercel](#16-despliegue-en-vercel)
-17. [Modo demo (sin Supabase)](#17-modo-demo-sin-supabase)
+9. [Modelo de datos](#9-modelo-de-datos)
+10. [API REST — endpoints](#10-api-rest--endpoints)
+11. [Seguridad del backend](#11-seguridad-del-backend)
+12. [Componentes React destacados](#12-componentes-react-destacados)
+13. [Routing y rutas protegidas](#13-routing-y-rutas-protegidas)
+14. [Variables de entorno](#14-variables-de-entorno)
+15. [Testing](#15-testing)
+16. [Cómo ejecutar el proyecto](#16-cómo-ejecutar-el-proyecto)
+17. [Despliegue](#17-despliegue)
 18. [Glosario](#18-glosario)
 
 ---
@@ -32,1092 +37,484 @@
 
 Entreteca es una plataforma web para descubrir lugares, eventos culturales y actividades en Santiago de Chile. Los usuarios pueden:
 
-- Explorar lugares y eventos con filtros (categoría, comuna, precio, fecha)
+- Explorar lugares y eventos con filtros (categoría, comuna, costo, búsqueda, fecha)
 - Ver un mapa interactivo con todos los puntos georeferenciados
 - Escribir reseñas con puntuación de 1 a 5 estrellas y votar las reseñas de otros
 - Guardar favoritos (lugares y eventos)
-- Administrar contenido desde un panel de administración (solo usuarios con rol `admin`)
+- **Proponer eventos**, que quedan pendientes de aprobación de un administrador
+- Administrar el contenido desde un panel de administración (solo rol `admin`)
+
+> **Nota de nombres:** el producto (frontend) se llama **Entreteca**; el backend
+> es el módulo **eventout-backend** y su base de datos es `eventout_db`. Son el
+> mismo proyecto.
 
 ---
 
-## 2. Herramientas y por qué se eligieron
+## 2. Arquitectura general
 
-### Frontend
+El sistema tiene dos piezas que se comunican por **REST/JSON** con autenticación **JWT**:
 
-| Herramienta | Versión | ¿Para qué sirve? | ¿Por qué se eligió? |
-|-------------|---------|-----------------|---------------------|
-| **React** | 19 | Librería de interfaces de usuario basada en componentes | Estándar de la industria, ecosistema enorme, permite construir UIs reactivas con estado |
-| **Vite** | 8 | Bundler y servidor de desarrollo | Extremadamente rápido, reemplaza a Webpack/CRA, excelente soporte para React |
-| **React Router DOM** | 7 | Enrutamiento en el cliente (SPA) | Librería oficial para navegación en React, soporte para rutas dinámicas y anidadas |
-| **Tailwind CSS** | v4 | Framework de estilos utilitario | Evita escribir CSS manual, clases predefinidas, sistema de diseño consistente |
-| **class-variance-authority (CVA)** | 0.7 | Gestión de variantes de componentes UI | Permite crear componentes con múltiples variantes (ej: Button primary/secondary/outline) sin condicionales complejos |
-| **clsx + tailwind-merge** | — | Combinar clases CSS condicionalmente | `clsx` maneja condiciones, `tailwind-merge` evita conflictos entre clases Tailwind |
-| **Lucide React** | 1.16 | Librería de íconos SVG | Íconos modernos, ligeros, consistentes con el diseño |
-| **react-leaflet + leaflet** | 5 / 1.9 | Mapa interactivo | Completamente gratuito, sin API key, basado en OpenStreetMap |
+```
+┌────────────┐    HTTP/JSON (REST)        ┌──────────────────────┐     JPA/Hibernate    ┌──────────┐
+│  Frontend  │  ───────────────────────►  │  Backend Spring Boot  │  ────────────────►   │  MySQL   │
+│  (React)   │  ◄── JWT + { data } ─────── │  controller→service   │                      │ eventout │
+│   :5173    │                            │   →repository→model    │                      │   _db    │
+└────────────┘                            └──────────────────────┘                      └──────────┘
+```
 
-### Backend / Infraestructura
+- El **frontend** no contiene lógica de datos: pide y muestra. Todas las llamadas pasan por un único cliente REST (`src/core/api.js`).
+- El **backend** centraliza la lógica de negocio, la seguridad y la persistencia en capas clásicas (Controller → Service → Repository → Model).
+- El contrato entre ambos es siempre `{ data, error }` (lo veremos en la sección 6).
+
+---
+
+## 3. Herramientas y por qué se eligieron
+
+### Frontend (`Producto/frontend`)
+
+| Herramienta | Versión | ¿Para qué sirve? |
+|-------------|---------|------------------|
+| **React** | 19 | Librería de UI basada en componentes |
+| **Vite** | 8 | Bundler y servidor de desarrollo (muy rápido) |
+| **React Router DOM** | 7 | Enrutamiento client-side (SPA) |
+| **Tailwind CSS** | v4 | Estilos utilitarios (config CSS-first) |
+| **class-variance-authority (CVA)** | 0.7 | Variantes de componentes UI (ej. Button) |
+| **clsx + tailwind-merge** | — | Combinar clases condicionalmente sin conflictos |
+| **lucide-react** | 1.16 | Íconos SVG |
+| **react-leaflet + leaflet** | 5 / 1.9 | Mapa interactivo sobre OpenStreetMap (sin API key) |
+| **Vitest + Testing Library + jsdom** | 4 / 16 / 29 | Pruebas unitarias y de componentes |
+
+### Backend (`Producto/backend/eventout-backend`)
 
 | Herramienta | ¿Para qué sirve? |
-|-------------|-----------------|
-| **Supabase** | Backend-as-a-Service: provee base de datos PostgreSQL, autenticación, Edge Functions y APIs REST/GraphQL automáticas |
-| **PostgreSQL** | Base de datos relacional usada por Supabase |
-| **Supabase Auth** | Sistema de autenticación con email/password, JWT, manejo de sesiones |
-| **Supabase Edge Functions** | Funciones serverless en Deno para operaciones de administración que requieren `service_role` |
-| **Vercel** | Plataforma de despliegue para aplicaciones frontend, integración con Git |
+|-------------|------------------|
+| **Java 21 + Spring Boot 3.5** | Framework del backend (Web, Data JPA, Security, Validation, Mail) |
+| **MySQL 8** | Base de datos relacional (`eventout_db`) |
+| **Hibernate (JPA)** | ORM: mapea entidades Java ↔ tablas |
+| **JWT (JJWT 0.12)** | Autenticación stateless por token |
+| **BCrypt** | Cifrado de contraseñas |
+| **springdoc-openapi (Swagger UI)** | Documentación interactiva de la API |
+| **Lombok** | Reduce código repetitivo (getters/setters/builder) |
 
 ### Herramientas de desarrollo
 
 | Herramienta | Uso |
 |-------------|-----|
-| **ESLint** | Análisis estático del código para detectar errores y malas prácticas |
-| **eslint-plugin-react-hooks** | Valida que los hooks de React se usen correctamente |
-| **Git + GitHub** | Control de versiones y colaboración |
+| **ESLint** | Análisis estático del frontend |
+| **Maven (mvnw)** | Build del backend |
+| **Git + GitHub** | Control de versiones |
 
 ---
 
-## 3. Estructura del proyecto
+## 4. Estructura del proyecto
 
 ```
 Proyecto_Portafolio/
-├── Documentacion/           ← Archivos de documentación
-└── Producto/                ← Código fuente
-    ├── public/              ← Archivos estáticos (favicon.svg)
-    ├── src/
-    │   ├── assets/          ← Imágenes (hero-santiago.webp)
-    │   ├── core/            ← Núcleo de la aplicación
-    │   │   ├── supabase.js          ← Cliente Supabase
-    │   │   ├── utils.js             ← Utilidades (cn, formatPrecio, formatFecha…)
-    │   │   └── auth/
-    │   │       ├── AuthContext.jsx  ← Proveedor global de autenticación
-    │   │       ├── authContextObject.js  ← createContext()
-    │   │       └── useAuth.js       ← Hook para consumir el contexto
-    │   ├── model/           ← Capa de datos
-    │   │   ├── entretecaRepository.js  ← Facade Supabase/Mock
-    │   │   └── mockData.js              ← Datos estáticos para modo demo
-    │   ├── viewmodel/       ← Lógica de negocio por pantalla
-    │   │   ├── shared/useAsyncData.js
-    │   │   ├── public/      ← ViewModels de páginas públicas
-    │   │   ├── auth/        ← ViewModels de autenticación
-    │   │   └── admin/       ← ViewModels del panel admin
-    │   └── view/            ← Componentes visuales
-    │       ├── components/  ← Componentes reutilizables
-    │       │   ├── ui/      ← Componentes base (Button, Card, Input…)
-    │       │   └── layout/  ← Layouts (AppLayout, AdminLayout, Header…)
-    │       └── pages/       ← Páginas de la aplicación
-    │           ├── auth/    ← Login, Registro, RecuperarPassword, NuevaPassword
-    │           └── admin/   ← Dashboard, Lugares, Eventos, Reseñas (admin)
-    ├── index.html
-    ├── vite.config.js
-    ├── vercel.json
-    ├── .env.local           ← Variables de entorno locales (NO se sube a Git)
-    └── .env.example         ← Plantilla de variables de entorno
+├── CLAUDE.md                 ← Convenciones del repo
+├── Documentacion/            ← Esta carpeta
+│   ├── documentacion-completa.md         (este archivo)
+│   ├── arquitectura-backend-springboot.md (detalle del backend)
+│   ├── Documentacion.txt
+│   └── Diagramas_EventOut.pdf
+└── Producto/
+    ├── frontend/             ← React (Vite)
+    │   ├── src/
+    │   │   ├── core/         ← api.js (cliente REST), utils.js, auth/
+    │   │   ├── model/        ← entretecaRepository.js, mockData.js
+    │   │   ├── viewmodel/    ← hooks de lógica por pantalla (public/auth/admin)
+    │   │   ├── view/         ← components/ (ui, layout) y pages/
+    │   │   └── test/         ← TODAS las pruebas, planas aquí (ver §15)
+    │   ├── .env.example      ← VITE_API_URL
+    │   ├── vite.config.js / vitest.config.js
+    │   └── vercel.json
+    └── backend/eventout-backend/   ← Spring Boot (Maven)
+        ├── src/main/java/.../eventout_backend/
+        │   ├── config/       ← SecurityConfig, OpenApiConfig, DataInitializer
+        │   ├── model/        ← entidades JPA + enums/
+        │   ├── repository/   ← interfaces Spring Data JPA
+        │   ├── dto/          ← objetos de transporte (+ request/ con validación)
+        │   ├── mapper/       ← DtoMapper (entidad → DTO)
+        │   ├── service/      ← lógica de negocio
+        │   ├── security/     ← JwtService, JwtAuthenticationFilter, AuthUser
+        │   ├── controller/   ← endpoints REST (+ admin/)
+        │   └── exception/    ← GlobalExceptionHandler → JSON { "error": ... }
+        └── src/main/resources/application.properties
 ```
 
 ---
 
-## 4. Arquitectura MVVM
+## 5. Frontend — Arquitectura MVVM
 
-El proyecto sigue el patrón **MVVM (Model–View–ViewModel)**:
+El frontend sigue **MVVM (Model–View–ViewModel)**:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  VIEW  (src/view/)                                      │
-│  Componentes React puros — solo muestran datos y        │
-│  llaman funciones. No contienen lógica de negocio.      │
-│  Ejemplo: LugarDetallePage, ResenasSection, Button      │
-└──────────────────────┬──────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  VIEW  (src/view/)                                        │
+│  Componentes React puros: muestran datos y llaman         │
+│  funciones. Sin lógica de negocio.                        │
+└──────────────────────┬───────────────────────────────────┘
                        │ usa
-┌──────────────────────▼──────────────────────────────────┐
-│  VIEWMODEL  (src/viewmodel/)                            │
-│  Hooks personalizados con toda la lógica de la pantalla │
-│  (estado, validaciones, llamadas al repo, navegación).  │
-│  Ejemplo: useResenasViewModel, useLoginViewModel        │
-└──────────────────────┬──────────────────────────────────┘
+┌──────────────────────▼───────────────────────────────────┐
+│  VIEWMODEL  (src/viewmodel/)                              │
+│  Hooks con la lógica de cada pantalla (estado,            │
+│  validaciones, llamadas al repo, navegación).             │
+└──────────────────────┬───────────────────────────────────┘
                        │ llama
-┌──────────────────────▼──────────────────────────────────┐
-│  MODEL  (src/model/)                                    │
-│  Acceso a datos. entretecaRepository.js abstrae         │
-│  Supabase y el modo mock detrás de funciones puras.     │
-│  Ejemplo: listarLugares(), publicarResena()             │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────▼───────────────────────────────────┐
+│  MODEL  (src/model/entretecaRepository.js)               │
+│  Acceso a datos. Llama al backend vía api.js y expone     │
+│  funciones puras: listarLugares(), publicarResena()…      │
+└──────────────────────────────────────────────────────────┘
 ```
 
-**Ventaja principal:** la View nunca llama a Supabase directamente. Si se cambia la base de datos, solo cambia el Model; la View y el ViewModel no se tocan.
+**Ventaja:** la View nunca llama al backend directamente. Cuando se migró de
+Supabase a Spring Boot, **solo cambiaron `api.js` y el repositorio**; los
+viewmodels y componentes quedaron intactos porque se respetó el contrato `{ data, error }`.
 
 ---
 
-## 5. Cómo React se conecta a Supabase
+## 6. Cómo el frontend habla con el backend (`api.js`)
 
-### Paso 1 — Instalar el cliente
-
-```bash
-npm install @supabase/supabase-js
-```
-
-### Paso 2 — Crear el cliente (`src/core/supabase.js`)
+Todo el tráfico pasa por [src/core/api.js](../Producto/frontend/src/core/api.js):
 
 ```js
-import { createClient } from '@supabase/supabase-js'
+const API_URL  = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+const TOKEN_KEY = 'eventout_token'   // el JWT se guarda en localStorage
 
-const url     = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-export const supabase = createClient(url, anonKey, {
-  auth: {
-    persistSession:    true,   // guarda la sesión en localStorage
-    autoRefreshToken:  true,   // renueva el token antes de que expire
-    detectSessionInUrl: true,  // lee tokens del URL (confirmación de email)
-  },
-})
-
-export const isSupabaseConfigured = Boolean(url && anonKey)
-```
-
-- **`import.meta.env`** es la forma de Vite para acceder a variables de entorno. Solo funcionan las que empiezan con `VITE_`.
-- **`persistSession: true`** hace que el usuario no tenga que volver a iniciar sesión al recargar la página.
-- **`autoRefreshToken: true`** renueva el JWT automáticamente antes de que expire (los tokens duran 1 hora por defecto).
-- **`detectSessionInUrl: true`** es necesario para que funcione la confirmación de email y el reset de contraseña (Supabase pone el token en la URL).
-- **`isSupabaseConfigured`** es un booleano que indica si las variables están configuradas. Si no lo están, la app funciona en modo demo con datos mock.
-
-### Paso 3 — Usar el cliente en el repositorio
-
-```js
-// Ejemplo: listar lugares desde Supabase
-export async function listarLugares({ idCategoria, q } = {}) {
-  let query = supabase
-    .from('lugar')                                           // tabla
-    .select('*, categoria:id_categoria (id_categoria, nombre, icono)')  // JOIN
-    .order('nombre')                                         // orden
-
-  if (idCategoria) query = query.eq('id_categoria', idCategoria)  // filtro exacto
-  if (q) query = query.or(`nombre.ilike.%${q}%,descripcion.ilike.%${q}%`)  // búsqueda
-
-  return query  // devuelve { data, error }
+export async function apiFetch(path, { method = 'GET', body } = {}) {
+  const headers = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  // ...fetch, manejo de 204 y de !res.ok...
+  // Devuelve SIEMPRE { data, error }
 }
 ```
 
-Todos los métodos del cliente Supabase devuelven `{ data, error }`. Nunca lanzan excepciones (salvo errores de red).
+Puntos clave:
+
+- **Contrato uniforme `{ data, error }`.** Nunca lanza excepciones: un fallo de
+  red o un `4xx/5xx` se devuelven como `error` (un `Error` con el mensaje del
+  backend, que responde `{ "error": "..." }`).
+- **`204 No Content` → `{ data: null, error: null }`** (ej. un DELETE).
+- **Token JWT** en `localStorage` bajo la clave `eventout_token`; se adjunta como
+  `Authorization: Bearer <token>` si existe.
+- **`buildQuery(params)`** arma el querystring omitiendo valores vacíos y uniendo
+  arrays por coma (ej. `idsResenas=a,b`).
+
+El repositorio [entretecaRepository.js](../Producto/frontend/src/model/entretecaRepository.js)
+envuelve `apiFetch` con las firmas que esperan los viewmodels y añade validaciones
+locales (regla XOR lugar/evento, exigir sesión, enums de estado). Detalles que
+preserva del contrato anterior:
+
+- Los **cuerpos se envían en snake_case** (`id_lugar`, `es_positivo`…) porque
+  Jackson en el backend usa `SNAKE_CASE`.
+- `obtenerEstadoFavoritos` devuelve **Sets** (`data.lugares.has(id)`) aunque el
+  backend responda arrays; la conversión se hace en el repositorio.
 
 ---
 
-## 6. Autenticación — flujo completo
+## 7. Autenticación — flujo completo (JWT)
 
-### Cómo funciona Supabase Auth
+La autenticación vive en [AuthContext.jsx](../Producto/frontend/src/core/auth/AuthContext.jsx)
+(Context API de React) y usa los endpoints `/auth/*` del backend.
 
-Supabase Auth usa **JWT (JSON Web Token)**. Cuando el usuario inicia sesión, Supabase genera dos tokens:
-- **access_token**: JWT de corta duración (1 hora). Se envía en cada request a la API.
-- **refresh_token**: Token de larga duración. Se usa para obtener un nuevo access_token sin pedir contraseña.
+```
+1. El usuario hace login/registro → POST /auth/login | /auth/register
+2. El backend valida (BCrypt) y responde { token, usuario }
+3. El frontend guarda el token (localStorage) y el perfil en el contexto
+4. Cada request siguiente lleva Authorization: Bearer <token>
+5. Al recargar la página: si hay token, se valida con GET /auth/me
+   - válido   → se restaura el perfil
+   - inválido → se borra el token (sesión caída)
+```
 
-Ambos se guardan en `localStorage` gracias a `persistSession: true`.
+El contexto expone:
 
-### AuthContext — el proveedor global (`src/core/auth/AuthContext.jsx`)
-
-Para que TODA la app sepa si el usuario está autenticado, se usa la **Context API de React**:
-
-```jsx
-// 1. Crear el contexto (authContextObject.js)
-export const AuthContext = createContext(null)
-
-// 2. Proveedor (AuthContext.jsx) — envuelve toda la app en App.jsx
-export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(isSupabaseConfigured)
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) return
-
-    // Carga la sesión guardada en localStorage al arrancar
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
-
-    // Escucha cambios en tiempo real (login, logout, refresh token)
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession)
-    })
-
-    return () => subscription.subscription.unsubscribe()
-  }, [])
-
-  // Cuando el userId cambia, carga el perfil desde la tabla 'usuario'
-  const userId = session?.user?.id
-  useEffect(() => {
-    if (!userId) { setProfile(null); return }
-    supabase
-      .from('usuario')
-      .select('*')
-      .eq('id_usuario', userId)
-      .maybeSingle()
-      .then(({ data }) => setProfile(data))
-  }, [userId])
-
-  const value = {
-    session,
-    user:            session?.user ?? demoUser,
-    profile:         profile ?? demoProfile,
-    loading,
-    isAuthenticated: Boolean(session) || !isSupabaseConfigured,
-    isAdmin:         profile?.rol === 'admin',
-    isDemo:          !isSupabaseConfigured,
-    signUp, signIn, signOut, resetPassword,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+```js
+const value = {
+  user,                               // { id, email } derivado del perfil
+  profile,                            // UsuarioDto del backend
+  loading,                            // true mientras valida /auth/me al arrancar
+  isAuthenticated: Boolean(profile),
+  isAdmin: profile?.rol === 'admin',
+  isDemo: false,                      // el modo demo quedó retirado (ver nota)
+  signUp, signIn, signOut, resetPassword, nuevaPassword,
 }
 ```
 
-**¿Por qué `onAuthStateChange`?** Porque varios eventos cambian la sesión de forma asíncrona: el usuario hace login en otra pestaña, el token expira y se renueva automáticamente, el usuario confirma su email. `onAuthStateChange` escucha todos estos eventos y actualiza el estado.
+- **`signUp`** hace auto-login: tras `/auth/register` guarda el token y navega al home.
+- **`signOut`** simplemente borra el token y el perfil (stateless: no hay endpoint de logout).
+- **`isAdmin`** se deriva del `rol` del perfil; las rutas `/admin` lo exigen (ver §13).
 
-### Hook `useAuth`
-
-```js
-// src/core/auth/useAuth.js
-import { useContext } from 'react'
-import { AuthContext } from './authContextObject'
-
-export function useAuth() {
-  return useContext(AuthContext)
-}
-```
-
-Cualquier componente puede llamar `const { user, isAuthenticated, signOut } = useAuth()` para acceder al estado de autenticación.
-
-### Registro de usuario (`signUp`)
-
-```js
-// En AuthContext.jsx
-const signUp = useCallback(async ({ email, password, nombre }) => {
-  return supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { nombre }  // se guarda en raw_user_meta_data del usuario
-    },
-  })
-}, [])
-```
-
-```js
-// En useRegistroViewModel.js — validación antes de llamar a Supabase
-async function handleSubmit(e) {
-  e.preventDefault()
-  if (password.length < 6) { setError('Mínimo 6 caracteres'); return }
-  if (password !== confirm) { setError('Las contraseñas no coinciden'); return }
-
-  setLoading(true)
-  const { data, error } = await signUp({ email, password, nombre })
-  setLoading(false)
-
-  if (error) { setError(error.message); return }
-
-  // Si Supabase devuelve sesión inmediata (sin confirmación de email obligatoria)
-  if (data?.session) {
-    navigate('/', { replace: true })
-  } else {
-    // Confirmación de email requerida → mostrar pantalla de éxito
-    setDone(true)
-  }
-}
-```
-
-### Inicio de sesión (`signIn`)
-
-```js
-const signIn = useCallback(async ({ email, password }) => {
-  return supabase.auth.signInWithPassword({ email, password })
-}, [])
-```
-
-`signInWithPassword` verifica las credenciales con el servidor, devuelve `{ data: { session, user }, error }`.
-
-### Cierre de sesión (`signOut`)
-
-```js
-const signOut = useCallback(async () => {
-  return supabase.auth.signOut()
-}, [])
-```
-
-Borra los tokens de `localStorage` y notifica a `onAuthStateChange` con `session = null`.
-
----
-
-## 7. Confirmación de correo electrónico
-
-### ¿Por qué existe?
-
-Verifica que el email pertenece al usuario antes de activar la cuenta. Sin confirmación, cualquiera podría registrarse con el email de otra persona.
-
-### Flujo paso a paso
-
-```
-1. Usuario llena el formulario de registro
-2. React llama a supabase.auth.signUp(...)
-3. Supabase crea el usuario en auth.users con email_confirmed_at = NULL
-4. Supabase envía un email automático con un enlace de confirmación
-5. El enlace tiene esta forma:
-   https://[proyecto].supabase.co/auth/v1/verify?token=...&type=signup&redirect_to=https://[app].vercel.app
-6. El usuario hace clic en el enlace
-7. Supabase valida el token y redirige al usuario a la app
-8. La URL de la app contiene parámetros de sesión en el fragmento (#):
-   https://[app].vercel.app/#access_token=...&refresh_token=...&type=signup
-9. El cliente Supabase detecta esto gracias a detectSessionInUrl: true
-10. onAuthStateChange se dispara con el evento 'SIGNED_IN' y la nueva sesión
-11. El usuario queda autenticado automáticamente
-```
-
-### Pantalla de éxito en el registro
-
-```jsx
-// RegistroPage muestra esto cuando data.session es null (confirmación requerida)
-if (vm.done) {
-  return (
-    <AuthLayout title="Revisa tu correo">
-      <SuccessBanner message="Cuenta creada. Confirma tu correo para activar el ingreso." />
-      <Link to="/login">Ir a ingresar</Link>
-    </AuthLayout>
-  )
-}
-```
-
-### Configuración en Supabase Dashboard
-
-En `Authentication → Email Templates` se puede personalizar el email que recibe el usuario. En `Authentication → URL Configuration` se configura el `Site URL` (URL de la app en producción) que Supabase usa para los redirects.
+> **Nota — modo demo retirado.** La versión Supabase tenía un "modo demo" sin
+> backend (`isDemo`). Hoy `isDemo` es siempre `false` y la app requiere el backend
+> corriendo. Quedan restos de UI de demo en `Header.jsx` y `Perfil.jsx` que ya no
+> se activan (código muerto, pendiente de limpiar).
 
 ---
 
 ## 8. Recuperación de contraseña
 
-### Flujo completo
+Flujo en dos pasos, contra `/auth/recuperar-password` y `/auth/nueva-password`:
 
 ```
-1. Usuario va a /recuperar-password y escribe su email
-2. React llama a:
-   supabase.auth.resetPasswordForEmail(email, {
-     redirectTo: 'https://[app].vercel.app/recuperar-password/nueva'
-   })
-3. Supabase envía un email con un enlace de recuperación
-4. El enlace redirige a /recuperar-password/nueva con tokens en la URL
-5. detectSessionInUrl: true los detecta y establece una sesión temporal
-6. NuevaPasswordPage muestra el formulario de nueva contraseña
-7. El usuario escribe y confirma la nueva contraseña
-8. React llama a:
-   supabase.auth.updateUser({ password: 'nuevaContraseña' })
-9. Supabase actualiza la contraseña en auth.users
-10. Se redirige al usuario a /login
+1. El usuario pide recuperar su clave (escribe su email)
+   → POST /auth/recuperar-password
+   → el backend crea un PasswordResetToken de un solo uso (expira en 1 h)
+     y envía un correo con el enlace:
+        <frontend>/recuperar-password/nueva?token=...
+2. El usuario abre el enlace → NuevaPasswordPage lee ?token= de la URL
+3. Escribe la nueva contraseña → POST /auth/nueva-password { token, password }
+4. El backend valida el token (no usado, no expirado) y actualiza la clave
 ```
 
-### Código de NuevaPasswordPage
+Por privacidad, `/auth/recuperar-password` siempre responde el mismo mensaje
+("Si el email existe, enviamos un enlace de recuperación"), exista o no la cuenta.
 
-```jsx
-// src/view/pages/auth/NuevaPassword.jsx
-async function handleSubmit(e) {
-  e.preventDefault()
-  if (password.length < 6) { setError('Mínimo 6 caracteres'); return }
-  if (password !== confirm) { setError('Las contraseñas no coinciden'); return }
-
-  setLoading(true)
-  const { error } = await supabase.auth.updateUser({ password })
-  setLoading(false)
-
-  if (error) { setError(error.message); return }
-  setDone(true)
-  setTimeout(() => navigate('/login', { replace: true }), 2500)
-}
-```
+> **En desarrollo:** si el SMTP no está configurado, el backend **no falla**:
+> escribe el enlace de recuperación en su log, de modo que el flujo se puede
+> probar igual.
 
 ---
 
-## 9. Base de datos — schema completo
+## 9. Modelo de datos
 
-### Diagrama de tablas
+Las entidades JPA (`src/main/java/.../model`) generan las tablas vía Hibernate
+(`ddl-auto=update`). Las PK tipo UUID se guardan como `VARCHAR(36)`; `categoria`
+usa una PK de texto (ej. `cat-parque`).
 
-```
-categoria (id_categoria PK, nombre, icono)
-    │
-    └── lugar (id_lugar UUID PK, id_categoria FK, nombre, descripcion,
-    │          direccion, comuna, latitud, longitud, es_gratuito,
-    │          precio, horario, imagen_url, wikipedia_slug, created_at)
-    │               │
-    │               ├── evento (id_evento UUID PK, id_lugar FK, nombre,
-    │               │           descripcion, fecha_inicio, fecha_fin,
-    │               │           es_gratuito, precio, imagen_url, created_at)
-    │               │
-    │               └── resena (id_resena UUID PK, id_usuario FK,
-    │                           id_lugar FK nullable, id_evento FK nullable,
-    │                           titulo, contenido, puntuacion 1-5,
-    │                           estado, created_at)
-    │                               │
-    │                               └── voto_resena (id_voto UUID PK,
-    │                                               id_usuario FK, id_resena FK,
-    │                                               es_positivo BOOLEAN)
-    │
-auth.users (gestionada por Supabase)
-    │
-    └── usuario (id_usuario UUID PK FK→auth.users, nombre, avatar_url,
-                 rol: 'usuario'|'admin', created_at)
-                     │
-                     ├── resena (id_usuario FK)
-                     ├── voto_resena (id_usuario FK)
-                     └── favorito (id_favorito UUID PK, id_usuario FK,
-                                   id_lugar FK nullable, id_evento FK nullable)
-```
+| Entidad | Tabla | Campos clave | Relaciones |
+|---------|-------|--------------|------------|
+| `Categoria` | categoria | id (texto), nombre, icono | — |
+| `Lugar` | lugar | id, nombre, descripcion, direccion, comuna, latitud, longitud, es_gratuito, precio, horario, imagen_url, wikipedia_slug, created_at | `@ManyToOne` → Categoria |
+| `Evento` | evento | id, nombre, descripcion, fecha_inicio, fecha_fin, es_gratuito, precio, imagen_url, **estado**, created_at | `@ManyToOne` → Lugar; `@ManyToOne` → Usuario (`propuestoPor`, nullable) |
+| `Usuario` | usuario | id, email (único), password_hash (`@JsonIgnore`), nombre, avatar_url, rol, created_at | — |
+| `Resena` | resena | id, titulo, contenido, puntuacion (1–5), estado, created_at | `@ManyToOne` → Usuario (obligatorio); Lugar **XOR** Evento |
+| `VotoResena` | voto_resena | id, es_positivo | `@ManyToOne` → Usuario, Resena (único por usuario+reseña) |
+| `Favorito` | favorito | id | `@ManyToOne` → Usuario; Lugar **XOR** Evento |
+| `PasswordResetToken` | password_reset_token | token, expires_at, used | `@ManyToOne` → Usuario |
 
-### Vista: `resena_con_votos`
+### Enums (se serializan en minúsculas para el frontend)
 
-Vista SQL que agrega los votos de cada reseña en una sola fila:
+- **`Rol`**: `USER`, `ADMIN` → JSON `"user"` / `"admin"` (por eso `profile.rol === 'admin'`).
+- **`EstadoResena`**: `VISIBLE`, `OCULTA`, `ELIMINADA`.
+- **`EstadoEvento`**: `PENDIENTE`, `APROBADO`, `RECHAZADO`.
 
-```sql
-SELECT
-  r.*,
-  COUNT(v.id_voto) FILTER (WHERE v.es_positivo = true)  AS votos_positivos,
-  COUNT(v.id_voto) FILTER (WHERE v.es_positivo = false) AS votos_negativos,
-  COUNT(v.id_voto) FILTER (WHERE v.es_positivo = true)
-    - COUNT(v.id_voto) FILTER (WHERE v.es_positivo = false) AS score
-FROM resena r
-LEFT JOIN voto_resena v ON v.id_resena = r.id_resena
-GROUP BY r.id_resena;
-```
+### Regla "XOR" (lugar o evento)
 
-El frontend consulta esta vista en vez de la tabla `resena` para obtener el conteo de votos sin necesidad de hacer JOIN en el cliente.
+Reseñas y favoritos apuntan a **exactamente uno**: un lugar *o* un evento, nunca
+ambos ni ninguno. Se valida en el **service** del backend y también en el
+repositorio del frontend antes de enviar.
+
+### Conteo de votos
+
+Lo que en Supabase era la vista `resena_con_votos` ahora lo calcula el
+`ResenaService`: agrega `votos_positivos`, `votos_negativos` y `score`
+(positivos − negativos) al devolver las reseñas.
+
+### Datos sembrados (`DataInitializer`)
+
+La primera vez que la BD está vacía se cargan los mismos datos que el frontend
+usaba como mock (6 categorías, 8 lugares, 5 eventos, 6 reseñas, 9 votos) y estos
+usuarios de prueba (contraseñas cifradas con BCrypt):
+
+| Email | Contraseña | Rol |
+|-------|-----------|-----|
+| `admin@eventout.cl` | `admin1234` | admin |
+| `andrea@eventout.cl`, `ricardo@…`, `elena@…`, `matias@…`, `camila@…` | `demo1234` | user |
 
 ---
 
-## 10. Row Level Security (RLS)
+## 10. API REST — endpoints
 
-### ¿Qué es RLS?
+| Método | Ruta | Acceso | Descripción |
+|--------|------|--------|-------------|
+| POST | `/auth/register` | público | Crear cuenta (auto-login: devuelve token) |
+| POST | `/auth/login` | público | Iniciar sesión → `{ token, usuario }` |
+| GET | `/auth/me` | autenticado | Perfil del usuario del token |
+| POST | `/auth/recuperar-password` | público | Envía correo con enlace de reset |
+| POST | `/auth/nueva-password` | público | Cambia la clave usando el token del correo |
+| GET | `/categorias` | público | Lista de categorías |
+| GET | `/lugares` | público | Lista con filtros `idCategoria, comuna, costo, q` |
+| GET | `/lugares/{id}` | público | Detalle de un lugar |
+| GET | `/eventos` | público | Lista (solo aprobados) con filtros `comuna, costo, q, desde` |
+| GET | `/eventos/{id}` | público | Detalle de un evento |
+| POST | `/eventos/propuestas` | autenticado | Proponer un evento (queda PENDIENTE) |
+| GET | `/resenas?idLugar=..` ó `?idEvento=..` | público | Reseñas visibles + conteo de votos |
+| POST | `/resenas` | autenticado | Publicar reseña (autor tomado del token) |
+| POST | `/votos` | autenticado | Votar una reseña |
+| GET | `/votos?idsResenas=a,b` | autenticado | Votos del usuario sobre esas reseñas |
+| GET | `/favoritos` | autenticado | Lugares y eventos favoritos del usuario |
+| GET | `/favoritos/estado?idLugares=..&idEventos=..` | autenticado | Cuáles son favoritos |
+| POST | `/favoritos/toggle` | autenticado | Agregar/quitar favorito |
+| POST/PUT/DELETE | `/admin/lugares[/{id}]` | admin | CRUD de lugares |
+| POST/PUT/DELETE | `/admin/eventos[/{id}]` | admin | CRUD de eventos |
+| GET | `/admin/eventos?estado=pendiente` | admin | Listar eventos (filtra propuestas) |
+| PATCH | `/admin/eventos/{id}/estado` | admin | Aprobar/rechazar una propuesta |
+| GET | `/admin/resenas` | admin | Todas las reseñas (moderación) |
+| PATCH | `/admin/resenas/{id}` | admin | Cambiar estado (visible/oculta/eliminada) |
 
-Es una característica de PostgreSQL que permite definir **políticas de acceso a nivel de fila**. Cuando RLS está activado en una tabla, cada SELECT/INSERT/UPDATE/DELETE es filtrado según las políticas definidas. Si no hay ninguna política que permita la operación, PostgreSQL la deniega.
-
-Supabase activa RLS en todas las tablas públicas y usa el JWT del usuario para saber quién está haciendo la consulta. La función `auth.uid()` devuelve el UUID del usuario autenticado a partir del JWT.
-
-### Función helper `es_admin()`
-
-```sql
-CREATE OR REPLACE FUNCTION public.es_admin()
-  RETURNS boolean
-  LANGUAGE sql
-  STABLE
-  SECURITY DEFINER
-  SET search_path = ''
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.usuario
-    WHERE id_usuario = auth.uid() AND rol = 'admin'
-  );
-$$;
-```
-
-- **`STABLE`**: no modifica la base de datos, puede ser cacheada dentro de una transacción.
-- **`SECURITY DEFINER`**: se ejecuta con los permisos del creador (superuser), no del llamador. Necesario para que funcione dentro de políticas RLS sin causar recursión infinita.
-- **`SET search_path = ''`**: previene ataques de "search path hijacking" donde alguien podría reemplazar funciones en otro schema.
-
-### Políticas implementadas
-
-#### Tabla `lugar` (igual para `categoria` y `evento`)
-
-```sql
--- Cualquiera puede leer
-CREATE POLICY lugar_select_public ON lugar
-  FOR SELECT USING (true);
-
--- Solo admin puede crear/modificar/eliminar
-CREATE POLICY lugar_admin_insert ON lugar
-  FOR INSERT WITH CHECK (es_admin());
-
-CREATE POLICY lugar_admin_update ON lugar
-  FOR UPDATE USING (es_admin());
-
-CREATE POLICY lugar_admin_delete ON lugar
-  FOR DELETE USING (es_admin());
-```
-
-#### Tabla `resena`
-
-```sql
--- Puede verse si es visible, o si es del propio usuario, o si es admin
-CREATE POLICY resena_select_visible ON resena
-  FOR SELECT USING (
-    estado = 'visible'
-    OR (SELECT auth.uid()) = id_usuario
-    OR es_admin()
-  );
-
--- Solo usuarios autenticados pueden insertar su propia reseña
-CREATE POLICY resena_insert_auth ON resena
-  FOR INSERT WITH CHECK ((SELECT auth.uid()) = id_usuario);
-```
-
-#### Tabla `favorito`
-
-```sql
--- Cada usuario solo ve y gestiona sus propios favoritos
-CREATE POLICY favorito_select_own ON favorito
-  FOR SELECT USING ((SELECT auth.uid()) = id_usuario);
-
-CREATE POLICY favorito_insert_own ON favorito
-  FOR INSERT WITH CHECK ((SELECT auth.uid()) = id_usuario);
-
-CREATE POLICY favorito_delete_own ON favorito
-  FOR DELETE USING ((SELECT auth.uid()) = id_usuario);
-```
-
-### `(SELECT auth.uid())` vs `auth.uid()` — diferencia de rendimiento
-
-```sql
--- Malo (PostgreSQL evalúa auth.uid() una vez POR FILA)
-USING (auth.uid() = id_usuario)
-
--- Bueno (PostgreSQL evalúa auth.uid() UNA SOLA VEZ por query)
-USING ((SELECT auth.uid()) = id_usuario)
-```
-
-Con `(SELECT auth.uid())`, PostgreSQL reconoce que es una subconsulta estable y la evalúa una sola vez para toda la consulta. En tablas con muchas filas, la diferencia de rendimiento es significativa.
+**Swagger UI:** `http://localhost:8080/swagger-ui.html` (con botón *Authorize* para pegar el JWT).
 
 ---
 
-## 11. Triggers y funciones SQL
+## 11. Seguridad del backend
 
-### Trigger `on_auth_user_created`
+Definida en [SecurityConfig.java](../Producto/backend/eventout-backend/src/main/java/com/proyectoPortafolio/eventout_backend/config/SecurityConfig.java):
 
-Este es el mecanismo más importante para que el registro funcione. Cuando Supabase crea un usuario en `auth.users`, necesitamos crear automáticamente su fila en `public.usuario`.
+- **Stateless** (`SessionCreationPolicy.STATELESS`): no hay sesión en servidor; cada request se autentica por su JWT.
+- **`JwtAuthenticationFilter`** intercepta cada petición, valida firma/expiración del token y coloca un `AuthUser` (id, email, rol) en el contexto.
+- **Contraseñas con BCrypt** (nunca en texto plano).
+- **Reglas de acceso:**
 
-```sql
--- La función que se ejecuta
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-  RETURNS trigger
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  SET search_path = ''
-AS $$
-BEGIN
-  INSERT INTO public.usuario (id_usuario, nombre, avatar_url, rol)
-  VALUES (
-    new.id,
-    -- Usa el nombre enviado desde el formulario (raw_user_meta_data)
-    -- Si no viene, usa la parte local del email (antes del @)
-    COALESCE(new.raw_user_meta_data->>'nombre', SPLIT_PART(new.email, '@', 1)),
-    new.raw_user_meta_data->>'avatar_url',
-    -- Por defecto 'usuario'; se puede cambiar a 'admin' desde el dashboard
-    COALESCE(new.raw_app_meta_data->>'rol', 'usuario')
-  );
-  RETURN new;
-END;
-$$;
+| Tipo | Rutas |
+|------|-------|
+| Público | `POST /auth/{register,login,recuperar-password,nueva-password}`; `GET` de `/categorias`, `/lugares`, `/eventos`, `/resenas`; Swagger |
+| Autenticado | todo lo demás (`POST /resenas`, `/votos`, `/favoritos/**`, `/eventos/propuestas`, `GET /auth/me`…) |
+| Solo admin (`ROLE_ADMIN`) | `/admin/**` |
 
--- El trigger que llama a la función
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
-```
-
-**¿Por qué `SECURITY DEFINER`?** Porque la función necesita insertar en `public.usuario` con permisos suficientes, independientemente de quién disparó el trigger.
-
-**`new.raw_user_meta_data`** contiene los datos opcionales enviados en el `signUp`:
-```js
-supabase.auth.signUp({
-  email, password,
-  options: { data: { nombre: 'Diego' } }  // ← esto llega como raw_user_meta_data
-})
-```
-
-### Trigger `set_updated_at`
-
-```sql
-CREATE OR REPLACE FUNCTION public.set_updated_at()
-  RETURNS trigger LANGUAGE plpgsql
-  SECURITY DEFINER SET search_path = ''
-AS $$
-BEGIN
-  new.updated_at = now();
-  RETURN new;
-END;
-$$;
-
--- Aplicado a evento y resena
-CREATE TRIGGER evento_updated_at
-  BEFORE UPDATE ON evento
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
-CREATE TRIGGER resena_updated_at
-  BEFORE UPDATE ON resena
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-```
-
-Actualiza automáticamente la columna `updated_at` cada vez que se modifica una fila, sin que el frontend tenga que preocuparse por enviarlo.
+- **Errores en JSON** con el mismo formato que el resto: `401 {"error":"No autenticado"}`, `403 {"error":"Acceso denegado"}`. El `GlobalExceptionHandler` traduce el resto (`404`, `400`, `409`, `500`).
+- **CORS** habilitado para el frontend (`http://localhost:5173`, `:3000` y `app.frontend.url`).
 
 ---
 
-## 12. Edge Functions
+## 12. Componentes React destacados
 
-### ¿Qué son?
+Todos viven en `src/view/` y son agnósticos del backend (no cambiaron en la migración).
 
-Funciones serverless que corren en la infraestructura de Supabase (sobre Deno, no Node.js). Funcionan como un mini backend API: reciben requests HTTP y devuelven JSON. Se usan cuando necesitas la **`service_role` key**, que omite todas las políticas RLS y tiene acceso total a la base de datos.
-
-URL base: `https://uaiecsrhhjkgdzycyejm.supabase.co/functions/v1/`
-
-### Las 3 funciones desplegadas
-
-| Función | Métodos | Propósito |
-|---------|---------|-----------|
-| `admin-lugares` | GET, POST, PUT, DELETE | CRUD completo de lugares |
-| `admin-eventos` | GET, POST, PUT, DELETE | CRUD completo de eventos |
-| `admin-resenas` | GET, PATCH | Listar y moderar reseñas |
-
-### Sistema de doble autorización
-
-Cada función tiene **dos capas de seguridad**:
-
-**Capa 1 — JWT verificado por el runtime de Supabase** (`verify_jwt: true`)
-
-Antes de que llegue al código de la función, el runtime verifica que:
-- Existe el header `Authorization: Bearer <token>`
-- El JWT es válido y no ha expirado
-- Fue firmado por el proyecto Supabase correcto
-
-Si falla → `401 Unauthorized` automático, el código ni se ejecuta.
-
-**Capa 2 — Verificación de rol admin en el código**
-
-```typescript
-async function verificarAdmin(authHeader: string | null): Promise<boolean> {
-  // Usa la anon key + JWT del usuario para identificarlo
-  const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: authHeader } }
-  })
-  const { data: { user } } = await userClient.auth.getUser()
-  if (!user) return false
-
-  // Usa service_role para consultar el rol (bypass RLS)
-  const db = createClient(SUPABASE_URL, SERVICE_KEY)
-  const { data } = await db
-    .from('usuario')
-    .select('rol')
-    .eq('id_usuario', user.id)
-    .single()
-
-  return data?.rol === 'admin'
-}
-```
-
-Si no es admin → `403 Forbidden`.
-
-### Cómo el frontend llama a las Edge Functions (`callAdmin`)
-
-```js
-// src/model/entretecaRepository.js
-async function callAdmin(fn, method, path = '', body = null) {
-  // 1. Obtiene el JWT del usuario desde localStorage
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token
-  if (!token) return { data: null, error: new Error('No autenticado') }
-
-  // 2. Construye la URL de la Edge Function
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fn}${path}`
-
-  // 3. Hace el fetch con el JWT en el header
-  let res
-  try {
-    res = await fetch(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: body != null ? JSON.stringify(body) : undefined,
-    })
-  } catch {
-    return { data: null, error: new Error('Error de red') }
-  }
-
-  // 4. Parsea la respuesta
-  let json
-  try { json = await res.json() } catch { json = {} }
-  if (!res.ok) return { data: null, error: new Error(json.error ?? 'Error en Edge Function') }
-  return { data: json, error: null }
-}
-```
-
-### Variables de entorno en Edge Functions
-
-Estas variables se inyectan automáticamente, no es necesario configurarlas:
-
-| Variable | Descripción |
-|----------|-------------|
-| `SUPABASE_URL` | URL del proyecto |
-| `SUPABASE_ANON_KEY` | Clave pública (respeta RLS) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Clave privada (bypass RLS) — **NUNCA exponerla al frontend** |
+- **`ui/Button`** — usa **CVA** para sus variantes (`variant`, `size`) en un solo lugar; las clases se combinan con `cn()` (clsx + tailwind-merge). Ver [Button.jsx](../Producto/frontend/src/view/components/ui/Button.jsx).
+- **`viewmodel/shared/useAsyncData`** — hook que envuelve cualquier función `async` que devuelva `{ data, error }`. Deriva `loading` en render (sin estado extra) y acepta un `trigger` numérico para forzar recargas (usado en el admin tras crear/editar/eliminar).
+- **`layout/ProtectedRoute`** — redirige a `/login` si no hay sesión; con `adminOnly`, redirige al home si el usuario no es admin. Mientras `loading`, no redirige (evita el "flash" de login).
+- **`ResenasSection`** — combina lista de reseñas, promedio de estrellas, formulario de nueva reseña y votación (thumb up/down resaltado según el voto del usuario).
+- **`Mapa` / `MapaLazy`** — `react-leaflet` v5 sobre OpenStreetMap; se carga de forma perezosa. Usa `L.divIcon` con SVG inline para evitar el problema de rutas de assets de Leaflet con bundlers.
+- **`EventoFormFields`** — campos del formulario de evento compartidos entre el alta del admin y la página pública de propuesta de eventos.
 
 ---
 
-## 13. Componentes React complejos
+## 13. Routing y rutas protegidas
 
-### `AuthContext` — Context API
-
-Context API de React es el mecanismo para compartir estado global sin pasar props por cada nivel de la jerarquía de componentes (problema llamado "prop drilling").
+Definido en [App.jsx](../Producto/frontend/src/App.jsx) con React Router v7 (SPA).
 
 ```
-App
-└── AuthProvider          ← provee el contexto
-    └── BrowserRouter
-        └── Header         ← consume con useAuth()
-        └── ProtectedRoute ← consume con useAuth()
-        └── PerfilPage     ← consume con useAuth()
-        └── AdminLayout    ← consume con useAuth()
+/ (AppLayout: Header + Footer)
+├── /                       HomePage
+├── /lugares                LugaresPage
+├── /lugares/:id            LugarDetallePage
+├── /eventos                EventosPage
+├── /eventos/proponer       ProponerEventoPage   (protegida)
+├── /eventos/:id            EventoDetallePage
+├── /mapa                   MapaPage
+├── /login /registro        (lazy)
+├── /recuperar-password     /recuperar-password/nueva   (lazy)
+├── /favoritos              FavoritosPage        (protegida)
+├── /perfil                 PerfilPage           (protegida)
+└── *                       NotFoundPage
+
+/admin  (ProtectedRoute adminOnly + AdminLayout)
+├── /admin                  AdminDashboardPage
+├── /admin/lugares          AdminLugaresPage
+├── /admin/eventos          AdminEventosPage
+└── /admin/resenas          AdminResenasPage
 ```
 
-Sin Context, cada componente que necesitara el estado del usuario recibiría `user`, `isAuthenticated`, etc. como props pasadas desde `App` a través de todos los niveles intermedios.
-
-### `useAsyncData` — Patrón de carga de datos
-
-Hook compartido que envuelve cualquier función async que devuelva `{ data, error }`:
-
-```js
-export function useAsyncData(fn, trigger = 0) {
-  const [result, setResult] = useState({ data: null, error: null, fn: null, trigger: null })
-
-  useEffect(() => {
-    let cancelled = false
-    fn().then((res) => {
-      if (cancelled) return  // evita actualizar estado si el componente ya se desmontó
-      setResult({ data: res?.data ?? null, error: res?.error ?? null, fn, trigger })
-    })
-    return () => { cancelled = true }  // cleanup: cancela si el componente se desmonta
-  }, [fn, trigger])
-
-  // "loading" se DERIVA en render, no es un estado separado
-  // Es true mientras el resultado guardado no corresponda a la fn/trigger actuales
-  const loading = result.fn !== fn || result.trigger !== trigger
-  return { data: result.data, error: result.error, loading }
-}
-```
-
-**Puntos clave:**
-- `fn` debe ser **estable** (envuelta en `useCallback`) o cambiará en cada render, causando un bucle infinito.
-- `trigger` es un número que se puede incrementar para forzar una recarga (usado en el admin después de crear/editar/eliminar).
-- `loading` es **derivado** (se calcula en render, no con `useState`) para evitar el problema de "flash of loading" entre recargas.
-- La variable `cancelled` evita actualizar el estado si el componente se desmontó mientras se esperaba la respuesta.
-
-**Uso típico:**
-```js
-const cargarLugares = useCallback(() => listarLugares(), [])
-const { data: lugares, loading, error } = useAsyncData(cargarLugares)
-```
-
-### `ProtectedRoute` — Rutas protegidas
-
-```jsx
-export function ProtectedRoute({ children, adminOnly = false }) {
-  const { isAuthenticated, isAdmin, loading } = useAuth()
-  const location = useLocation()
-
-  // Mientras carga la sesión, no redirigir todavía (evita flash de login)
-  if (loading) {
-    return <div>Cargando…</div>
-  }
-
-  // Usuario no autenticado → redirige a login guardando la ruta de origen
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />
-  }
-
-  // Ruta solo para admins y el usuario no es admin
-  if (adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />
-  }
-
-  return children
-}
-```
-
-El `state={{ from: location.pathname }}` guarda la ruta que el usuario intentaba visitar. Después del login exitoso, el ViewModel lo recupera y redirige allí:
-
-```js
-// useLoginViewModel.js
-const from = location.state?.from ?? '/'
-// ... tras login exitoso:
-navigate(from, { replace: true })
-```
-
-### `ResenasSection` — Reseñas y votación
-
-Componente que combina: lista de reseñas, promedio de estrellas, formulario de nueva reseña y sistema de votación.
-
-```
-ResenasSection
-├── useResenasViewModel  ← toda la lógica (carga, publicar, votar)
-├── Estrellas            ← promedio visual
-├── Button               ← toggle del formulario (solo si autenticado)
-├── ResenaForm           ← formulario para escribir nueva reseña
-└── ResenaCard[]         ← cada reseña con botones de voto
-    ├── Avatar con fallback a DiceBear
-    ├── Fecha relativa ("Hace 3 días")
-    ├── Estrellas
-    └── Botones thumb_up / thumb_down (resaltados si el usuario ya votó)
-```
-
-**Estado de votación derivado:**
-```js
-// El voto del usuario actual para cada reseña se guarda en un Map
-const votoPorResena = useMemo(() => {
-  const map = new Map()
-  votos.forEach((voto) => map.set(voto.id_resena, voto))
-  return map
-}, [votos])
-
-// En ResenaCard: votoUsuario?.es_positivo === true → botón azul
-//               votoUsuario?.es_positivo === false → botón rojo
-//               votoUsuario === undefined → botón gris
-```
-
-### `Mapa` — react-leaflet v5
-
-```
-Mapa (lazy loaded)
-├── MapContainer        ← inicializa el mapa con centro y zoom
-├── ControladorVista    ← hook useMap() para actualizar vista dinámicamente
-├── TileLayer           ← carga los tiles de OpenStreetMap
-└── Marker[]            ← un marcador por punto válido
-    ├── icon: L.divIcon ← SVG personalizado (azul=lugar, cian=evento)
-    └── Popup           ← popup con nombre, comuna y link al detalle
-```
-
-**Por qué `L.divIcon` en vez del marcador por defecto de Leaflet:**  
-El marcador por defecto de Leaflet usa archivos de imagen (`marker-icon.png`). Con bundlers (Vite, Webpack) las rutas de estos archivos se rompen porque el bundler mueve los assets. `L.divIcon` con SVG inline evita completamente este problema.
-
-**`ControladorVista` — el patrón useMap():**
-```jsx
-function ControladorVista({ lat, lng, zoom }) {
-  const map = useMap()  // solo funciona dentro de MapContainer
-  useEffect(() => {
-    map.setView([lat, lng], zoom, { animate: true })
-  }, [map, lat, lng, zoom])  // primitivos → comparación correcta por valor
-  return null
-}
-```
-
-`useMap()` es un hook de react-leaflet que da acceso a la instancia del mapa de Leaflet. No existe fuera del árbol de `MapContainer`.
-
-### `Button` — CVA (Class Variance Authority)
-
-```jsx
-const buttonVariants = cva(
-  // clases base aplicadas siempre
-  'inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-all disabled:opacity-50',
-  {
-    variants: {
-      variant: {
-        default:     'bg-primary text-on-primary',
-        secondary:   'bg-secondary text-white',
-        outline:     'border border-outline-variant bg-white',
-        destructive: 'bg-error text-on-error',
-      },
-      size: {
-        sm: 'h-8 px-3 text-xs',
-        md: 'h-10 px-4',
-        lg: 'h-12 px-6 text-base',
-      },
-    },
-    defaultVariants: { variant: 'default', size: 'md' },
-  },
-)
-
-export function Button({ variant, size, className, ...props }) {
-  return (
-    <button
-      className={cn(buttonVariants({ variant, size }), className)}
-      {...props}
-    />
-  )
-}
-```
-
-CVA permite definir todas las variantes de un componente en un solo lugar. Al llamar `<Button variant="secondary" size="lg">`, CVA automáticamente selecciona las clases correctas.
-
-### `entretecaRepository.js` — Facade pattern
-
-El repositorio actúa como una **fachada** (Facade): expone una interfaz unificada (`listarLugares`, `publicarResena`, etc.) y oculta si los datos vienen de Supabase o del mock.
-
-```js
-export async function listarLugares(filtros = {}) {
-  if (!isSupabaseConfigured) {
-    // Modo demo: filtra el array local
-    return { data: lugaresState.filter(...), error: null }
-  }
-  // Modo producción: consulta Supabase
-  return supabase.from('lugar').select('*').order('nombre')
-}
-```
+- **Lazy loading:** las páginas de **auth** y **admin** se cargan en chunks aparte (`lazy()` + `<Suspense>`), reduciendo el bundle inicial.
+- **`vercel.json`** reescribe toda ruta a `/index.html` para que el refresco de una URL profunda (ej. `/lugares/123`) no devuelva 404 en producción.
 
 ---
 
-## 14. Routing y rutas protegidas
+## 14. Variables de entorno
 
-### React Router DOM v7
+### Frontend
 
-El enrutamiento es client-side: no hay navegación real al servidor. Al cambiar de ruta, React Router swapea el componente renderizado sin recargar la página.
+Solo las variables con prefijo `VITE_` son accesibles desde el cliente
+(`import.meta.env.VITE_*`).
 
-```jsx
-// App.jsx — estructura completa de rutas
-function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<PageFallback />}>
-          <Routes>
-            {/* Rutas públicas dentro del layout con Header y Footer */}
-            <Route element={<AppLayout />}>
-              <Route index element={<HomePage />} />
-              <Route path="lugares" element={<LugaresPage />} />
-              <Route path="lugares/:id" element={<LugarDetallePage />} />  {/* ruta dinámica */}
-              <Route path="login" element={<LoginPage />} />               {/* lazy */}
-              <Route path="recuperar-password/nueva" element={<NuevaPasswordPage />} />
+| Variable | Default | Uso |
+|----------|---------|-----|
+| `VITE_API_URL` | `http://localhost:8080` | URL base del backend |
 
-              {/* Rutas protegidas — redirigen a /login si no autenticado */}
-              <Route path="favoritos" element={
-                <ProtectedRoute><FavoritosPage /></ProtectedRoute>
-              } />
-            </Route>
+Plantilla en [.env.example](../Producto/frontend/.env.example). El `.env.local`
+(no se versiona) sobre-escribe el valor.
 
-            {/* Panel admin — layout diferente, protegido + solo admin */}
-            <Route path="admin" element={
-              <ProtectedRoute adminOnly><AdminLayout /></ProtectedRoute>
-            }>
-              <Route index element={<AdminDashboardPage />} />
-              <Route path="lugares" element={<AdminLugaresPage />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </AuthProvider>
-  )
-}
-```
+### Backend (`application.properties`, sobre-escribibles por env)
 
-### Lazy Loading
-
-Las rutas de auth y admin se cargan de forma perezosa (solo cuando el usuario las visita):
-
-```js
-const LoginPage = lazy(() =>
-  import('@/view/pages/auth/Login').then((m) => ({ default: m.LoginPage }))
-)
-```
-
-`lazy()` + `Suspense` hacen que el código de cada sección se descargue en un chunk separado, reduciendo el tamaño del bundle inicial.
-
-### `vercel.json` — Fix para SPA en Vercel
-
-Sin esta configuración, refrescar la página en `/lugares/123` devuelve un 404 porque Vercel busca un archivo físico en esa ruta (no existe).
-
-```json
-{
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}
-```
-
-Esta regla redirige TODA petición a `index.html`, y React Router se encarga de renderizar el componente correcto según la URL.
+| Variable | Default | Uso |
+|----------|---------|-----|
+| Datasource MySQL | `eventout_db` en `localhost:3306` (se crea sola) | Conexión a la BD |
+| `JWT_SECRET` | clave de desarrollo | Firma HS256 (cambiar en producción) |
+| `JWT_EXPIRATION_MS` | `86400000` (24 h) | Vida del access token |
+| `JWT_RESET_EXPIRATION_MS` | `3600000` (1 h) | Vida del token de reset |
+| `FRONTEND_URL` | `http://localhost:5173` | Origen permitido (CORS) y base de enlaces de correo |
+| `MAIL_HOST/PORT/USERNAME/PASSWORD` | Gmail SMTP / vacío | Envío de correos |
 
 ---
 
-## 15. Variables de entorno
+## 15. Testing
 
-### ¿Por qué son necesarias?
+### Frontend (Vitest + Testing Library)
 
-Las credenciales de Supabase no deben estar hardcodeadas en el código fuente. Si el código está en GitHub (público o privado), las credenciales estarían expuestas. Las variables de entorno permiten que el código sea el mismo en todos los entornos, pero con valores diferentes.
-
-### Convención de Vite
-
-Solo las variables que empiezan con `VITE_` son accesibles desde el código del cliente:
-
-```
-VITE_SUPABASE_URL=https://xxx.supabase.co    → accesible
-SUPABASE_SECRET=abc123                        → NO accesible (queda en el servidor)
-```
-
-Se acceden con `import.meta.env.VITE_NOMBRE_VARIABLE`.
-
-### Archivos de entorno
-
-| Archivo | Propósito | Se sube a Git |
-|---------|-----------|---------------|
-| `.env.example` | Plantilla con las variables requeridas (sin valores) | ✅ Sí |
-| `.env.local` | Valores reales para desarrollo local | ❌ No (en .gitignore) |
-
-### Contenido de `.env.local`
+- **Todas las pruebas viven directamente en `src/test/`** (planas, sin subcarpetas;
+  ej. `src/core/utils.js` → `src/test/utils.test.js`). No se colocan junto al código.
+- Importan el código bajo prueba con el alias `@/` (no rutas relativas).
+- Config en [vitest.config.js](../Producto/frontend/vitest.config.js): entorno
+  `jsdom`, `setupFiles: ['./src/test/setup.js']` (matchers de jest-dom + cleanup),
+  cobertura con `v8`.
 
 ```bash
-VITE_SUPABASE_URL=https://uaiecsrhhjkgdzycyejm.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+cd Producto/frontend
+npm test            # corre toda la suite una vez
+npm run test:watch  # modo watch
+npm run test:coverage
 ```
 
-La `ANON_KEY` es **pública por diseño** en Supabase. No es un secreto. La seguridad de los datos está garantizada por las políticas RLS, no por ocultar esta clave.
+Qué se cubre hoy: funciones puras de `utils` (`formatPrecio`, `imgPlaceholder`) y
+componentes (`Button`, `Estrellas`, `LugarCard`).
+
+### Backend (JUnit)
+
+Hoy solo existe el test de arranque por defecto (`contextLoads`). Ampliar con
+tests de servicios (Mockito) y de controllers (`@WebMvcTest`) queda pendiente.
 
 ---
 
-## 16. Despliegue en Vercel
+## 16. Cómo ejecutar el proyecto
 
-### ¿Qué es Vercel?
+### Backend (requiere MySQL corriendo)
 
-Plataforma de hosting especializada en aplicaciones frontend (Next.js, React, Vite). Detecta automáticamente el framework, instala dependencias, construye y despliega.
-
-### Proceso de despliegue
-
-```
-1. git push a la rama main
-2. Vercel detecta el push automáticamente
-3. npm install  → instala dependencias
-4. npm run build → vite build → genera /dist
-5. Vercel sirve /dist como CDN global
-6. La app está disponible en https://[nombre].vercel.app
+```bash
+cd Producto/backend/eventout-backend
+# 1) En application.properties: completar usuario/contraseña de MySQL
+# 2) Levantar:
+./mvnw spring-boot:run
 ```
 
-### Configurar variables de entorno en Vercel
+- API: `http://localhost:8080`
+- Swagger: `http://localhost:8080/swagger-ui.html`
+- La BD `eventout_db` y sus tablas se crean solas; el `DataInitializer` siembra los datos la primera vez.
 
-En el Dashboard de Vercel → Project → Settings → Environment Variables:
+### Frontend
 
-```
-VITE_SUPABASE_URL    = https://uaiecsrhhjkgdzycyejm.supabase.co
-VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Importante:** sin estas variables, el proyecto desplegado funcionará en modo demo (sin datos reales de Supabase).
-
-### Build de producción: qué genera `npm run build`
-
-```
-dist/
-├── index.html                   ← entry point
-├── assets/
-│   ├── index-[hash].js          ← bundle principal (~242KB gzip: 71KB)
-│   ├── supabase-[hash].js       ← librería Supabase (~200KB gzip: 51KB)
-│   ├── Mapa-[hash].js           ← Leaflet + react-leaflet (~155KB gzip: 46KB)
-│   ├── Mapa-[hash].css          ← CSS de Leaflet (~15KB gzip: 6KB)
-│   ├── Login-[hash].js          ← chunk lazy de login (~2KB)
-│   ├── Registro-[hash].js       ← chunk lazy de registro (~3KB)
-│   ├── AdminLugares-[hash].js   ← chunk lazy admin (~10KB)
-│   └── hero-santiago-[hash].webp← imagen del hero (~652KB)
+```bash
+cd Producto/frontend
+npm install
+npm run dev      # http://localhost:5173
 ```
 
-Los chunks lazy (Login, Admin, Mapa) solo se descargan cuando el usuario navega a esa sección, haciendo la carga inicial más rápida.
+Opcional: crear `.env.local` con `VITE_API_URL=http://localhost:8080` (es el valor por defecto).
 
 ---
 
-## 17. Modo demo (sin Supabase)
+## 17. Despliegue
 
-Si `VITE_SUPABASE_URL` o `VITE_SUPABASE_ANON_KEY` no están configuradas, `isSupabaseConfigured = false` y la app entra en modo demo:
+- **Frontend:** `npm run build` genera `/dist` (estático). El `vercel.json` ya
+  incluye el rewrite SPA. En el hosting hay que definir `VITE_API_URL` apuntando
+  al backend desplegado.
+- **Backend:** requiere un MySQL accesible y las variables de entorno de la §14
+  (sobre todo `JWT_SECRET` y, para correo real, `MAIL_*`).
 
-- Todos los datos vienen de arrays en memoria (`mockData.js`)
-- El usuario demo es `{ id: 'u-demo', email: 'demo@entreteca.cl', rol: 'admin' }`
-- El CRUD del admin funciona (modifica los arrays en memoria)
-- Las reseñas y votos se guardan en memoria (se pierden al recargar)
-- El Header muestra el badge "Modo demo"
-
-Esto permite desarrollar y testear la interfaz sin necesidad de conexión a internet ni a Supabase.
+> La configuración de despliegue conjunto (dónde se hospeda el backend, SMTP real)
+> aún está pendiente — ver "Pendientes" en [arquitectura-backend-springboot.md](arquitectura-backend-springboot.md).
 
 ---
 
@@ -1125,21 +522,22 @@ Esto permite desarrollar y testear la interfaz sin necesidad de conexión a inte
 
 | Término | Definición |
 |---------|------------|
-| **JWT** | JSON Web Token. Token codificado que contiene información del usuario (id, email, rol). Se envía en cada request para autenticarse. |
-| **RLS** | Row Level Security. Políticas de PostgreSQL que filtran qué filas puede ver/modificar cada usuario. |
-| **ANON KEY** | Clave pública de Supabase. Se puede exponer en el frontend. La seguridad la garantiza RLS. |
-| **SERVICE ROLE KEY** | Clave secreta de Supabase. Omite RLS, acceso total. Solo debe usarse en el servidor. |
-| **Edge Function** | Función serverless que corre en Deno en los servidores de Supabase. Actúa como backend API. |
+| **JWT** | JSON Web Token. Pase firmado que el servidor entrega al iniciar sesión; el cliente lo envía en cada request (`Authorization: Bearer`). |
+| **BCrypt** | Algoritmo para cifrar contraseñas (hash con sal). Las claves nunca se guardan en texto plano. |
+| **Stateless** | El servidor no guarda sesión en memoria; cada request se valida por su token. |
+| **Spring Boot** | Framework de Java para construir el backend (web, datos, seguridad). |
+| **JPA / Hibernate** | Mapeo objeto-relacional: las entidades Java se convierten en tablas y consultas SQL. |
+| **DTO** | Data Transfer Object. Lo que viaja por la red; evita exponer entidades y oculta datos sensibles (ej. el hash de contraseña). |
+| **snake_case** | Convención de nombres con guion bajo (`es_gratuito`). El backend serializa el JSON así para coincidir con el frontend. |
+| **CORS** | Permisos para que el navegador deje al frontend (`:5173`) llamar al backend (`:8080`). |
+| **Swagger / OpenAPI** | Documentación interactiva de la API REST. |
+| **MVVM** | Model-View-ViewModel. Separa datos, lógica y presentación en el frontend. |
+| **Hook** | Función de React que empieza por `use`; permite estado y efectos en componentes. |
+| **Context API** | Sistema de React para compartir estado global (ej. la sesión) sin "prop drilling". |
+| **CVA** | Class Variance Authority. Maneja variantes de componentes con Tailwind. |
 | **SPA** | Single Page Application. La app carga una vez y navega sin recargar el navegador. |
-| **Lazy Loading** | Técnica para cargar código JavaScript solo cuando se necesita, reduciendo el bundle inicial. |
-| **MVVM** | Model-View-ViewModel. Patrón de arquitectura que separa datos, lógica y presentación. |
-| **Hook** | Función de React que empieza por `use`. Permite usar estado y efectos en componentes funcionales. |
-| **Context API** | Sistema de React para compartir estado global sin pasar props a través de cada nivel. |
-| **CVA** | Class Variance Authority. Librería para manejar variantes de componentes con Tailwind. |
-| **Vite** | Bundler moderno que usa ES modules nativo. Mucho más rápido que Webpack. |
-| **Bundle** | Archivo JavaScript único que Vite genera juntando todo el código del proyecto. |
-| **Trigger** | En PostgreSQL, una función que se ejecuta automáticamente ante un evento (INSERT, UPDATE, DELETE). |
-| **FK** | Foreign Key. Columna que referencia la clave primaria de otra tabla, garantizando integridad referencial. |
-| **UUID** | Identificador único universal. Formato: `550e8400-e29b-41d4-a716-446655440000`. Más seguro que IDs numéricos secuenciales. |
-| **react-leaflet** | Wrapper de React para la librería de mapas Leaflet. Usa componentes React en vez de la API imperativa de Leaflet. |
-| **OpenStreetMap** | Mapa colaborativo y gratuito. Alternativa sin costo a Google Maps. |
+| **Lazy Loading** | Cargar código JS solo cuando se necesita, reduciendo el bundle inicial. |
+| **FK** | Foreign Key. Columna que referencia la PK de otra tabla. |
+| **UUID** | Identificador único universal (`550e8400-e29b-41d4-...`). Se guarda como `VARCHAR(36)`. |
+| **react-leaflet** | Wrapper de React para la librería de mapas Leaflet. |
+| **OpenStreetMap** | Mapa colaborativo y gratuito; alternativa sin costo a Google Maps. |

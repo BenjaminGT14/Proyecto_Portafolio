@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Button } from './Button'
+import { Button } from '@/view/components/ui/Button'
 
 // CONCEPTO 3: interacción del usuario en el componente más simple.
 // Verificamos que el botón muestre su texto y que ejecute su callback al pulsar.

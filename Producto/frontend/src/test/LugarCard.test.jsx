@@ -1,15 +1,15 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { LugarCard } from './LugarCard'
+import { LugarCard } from '@/view/components/LugarCard'
 
 // CONCEPTO 2: probar el RENDERIZADO de un componente (PU-04 del informe).
 // "Renderizado de la tarjeta de lugar con props válidas → muestra nombre,
 //  categoría e imagen correctamente."
 //
-// LugarCard contiene <BotonFavorito>, que usa login/Supabase a través de
+// LugarCard contiene <BotonFavorito>, que usa login/API a través de
 // useFavoritoViewModel. Lo "mockeamos" (reemplazamos por una versión falsa)
-// para poder probar la tarjeta sin necesitar sesión ni base de datos.
+// para poder probar la tarjeta sin necesitar sesión ni backend.
 vi.mock('@/viewmodel/public/useFavoritoViewModel', () => ({
   useFavoritoViewModel: () => ({ activo: false, submitting: false, toggle: vi.fn() }),
 }))
