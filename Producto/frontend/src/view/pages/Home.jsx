@@ -2,12 +2,15 @@ import { Link } from 'react-router-dom'
 import { Icon } from '@/view/components/ui/Icon'
 import { MapaLazy as Mapa } from '@/view/components/MapaLazy'
 import { BotonFavorito } from '@/view/components/BotonFavorito'
+import { ResenaCard } from '@/view/components/ResenaCard'
 import { useHomeViewModel } from '@/viewmodel/public/useHomeViewModel'
+import { useResenasDestacadasViewModel } from '@/viewmodel/public/useResenasDestacadasViewModel'
 import { cn, formatPrecio, imgPlaceholder } from '@/core/utils'
 import heroSantiago from '@/assets/Hero/hero-santiago.webp'
 
 export function HomePage() {
   const vm = useHomeViewModel()
+  const reviews = useResenasDestacadasViewModel({ limit: 6 })
 
   return (
     <>
@@ -54,6 +57,7 @@ export function HomePage() {
                 />
               </div>
               <select
+                aria-label="Categoría"
                 value={vm.categoriaSel}
                 onChange={(e) => vm.setCategoriaSel(e.target.value)}
                 className="w-full rounded-lg border border-outline-variant px-4 py-3 text-base outline-none focus:border-secondary focus:ring-1 focus:ring-secondary md:w-44"
@@ -66,6 +70,7 @@ export function HomePage() {
                 ))}
               </select>
               <select
+                aria-label="Filtrar por precio"
                 value={vm.costoSel}
                 onChange={(e) => vm.setCostoSel(e.target.value)}
                 className="w-full rounded-lg border border-outline-variant px-4 py-3 text-base outline-none focus:border-secondary focus:ring-1 focus:ring-secondary md:w-44"
@@ -137,7 +142,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ---------- Reseñas (demo) ---------- */}
+      {/* ---------- Reseñas de la comunidad ---------- */}
       <section className="mx-auto max-w-7xl px-6 py-20 xl:max-w-[1440px] xl:px-10">
         <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
           <div>
@@ -145,59 +150,44 @@ export function HomePage() {
               Opiniones de la comunidad
             </h2>
             <p className="mt-2 text-base text-outline">
-              Lo que dicen otros exploradores como tú.
+              Las reseñas mejor valoradas por otros exploradores como tú.
             </p>
           </div>
-          <button type="button" className="hidden items-center gap-2 font-bold text-secondary hover:underline md:flex">
+          <button
+            type="button"
+            onClick={reviews.handleEscribir}
+            className="hidden items-center gap-2 font-bold text-secondary hover:underline md:flex"
+          >
             Escribir una reseña <Icon name="edit" size="sm" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {vm.reviewsDemo.map((r) => (
-            <div
-              key={r.nombre}
-              className="relative rounded-xl border border-outline-variant bg-white p-6 shadow-sm"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <img
-                  src={r.avatar}
-                  alt={r.nombre}
-                  className="size-12 rounded-full object-cover"
-                />
-                <div>
-                  <p className="text-sm font-semibold">{r.nombre}</p>
-                  <p className="text-[10px] uppercase tracking-wide text-outline">{r.cuando}</p>
-                </div>
-              </div>
-              <div className="mb-3 flex">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Icon
-                    key={i}
-                    name="star"
-                    size="sm"
-                    filled={i < r.estrellas}
-                    className={i < r.estrellas ? 'text-on-tertiary-container' : 'text-outline-variant'}
-                  />
-                ))}
-              </div>
-              <p className="mb-6 text-sm italic leading-relaxed text-on-surface-variant">
-                {r.texto}
-              </p>
-              <div className="flex items-center gap-4">
-                <button type="button" className="flex items-center gap-1 text-xs text-outline transition-colors hover:text-secondary">
-                  <Icon name="thumb_up" size="sm" /> {r.up}
-                </button>
-                <button type="button" className="flex items-center gap-1 text-xs text-outline transition-colors hover:text-error">
-                  <Icon name="thumb_down" size="sm" /> {r.down}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="mt-6 text-center text-xs text-outline">
-          Vista previa: la votación real se habilita en el próximo sprint.
-        </p>
+        {reviews.loading ? (
+          <ResenasSkeleton />
+        ) : reviews.resenas.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-outline-variant bg-white p-10 text-center text-sm text-outline">
+            Aún no hay reseñas publicadas. ¡Sé el primero en compartir tu experiencia
+            en un lugar o evento!
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {reviews.resenas.map((r) => (
+              <ResenaCard
+                key={r.id_resena}
+                resena={r}
+                votoUsuario={reviews.votoPorResena.get(r.id_resena)}
+                onVotar={(esPositivo) => reviews.handleVotar(r.id_resena, esPositivo)}
+                origen={
+                  r.id_lugar
+                    ? { to: `/lugares/${r.id_lugar}`, nombre: r.lugar?.nombre }
+                    : r.id_evento
+                      ? { to: `/eventos/${r.id_evento}`, nombre: r.evento?.nombre }
+                      : null
+                }
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ---------- CTA final ---------- */}
@@ -224,6 +214,26 @@ export function HomePage() {
         </div>
       </section>
     </>
+  )
+}
+
+function ResenasSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-outline-variant bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="size-12 animate-pulse rounded-full bg-surface-container-high" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 w-28 animate-pulse rounded bg-surface-container-high" />
+              <div className="h-2 w-16 animate-pulse rounded bg-surface-container-high" />
+            </div>
+          </div>
+          <div className="h-3 w-full animate-pulse rounded bg-surface-container-high" />
+          <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-surface-container-high" />
+        </div>
+      ))}
+    </div>
   )
 }
 

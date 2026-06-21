@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { obtenerEstadoFavoritos, toggleFavorito } from '@/model/entretecaRepository'
+import { obtenerEstadoFavoritos, toggleFavorito } from '@/model/eventoutRepository'
 import { useAuth } from '@/core/auth/useAuth'
 
 export function useFavoritoViewModel({ idLugar, idEvento }) {

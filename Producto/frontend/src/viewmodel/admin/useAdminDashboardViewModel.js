@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { listarEventosAdmin, listarLugares, listarResenasAdmin } from '@/model/entretecaRepository'
+import { listarEventosAdmin, listarLugares, listarResenasAdmin } from '@/model/eventoutRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
 export function useAdminDashboardViewModel() {

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { listarEventos, listarLugares } from '@/model/entretecaRepository'
+import { listarEventos, listarLugares } from '@/model/eventoutRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
 const TIPOS_MAPA = [

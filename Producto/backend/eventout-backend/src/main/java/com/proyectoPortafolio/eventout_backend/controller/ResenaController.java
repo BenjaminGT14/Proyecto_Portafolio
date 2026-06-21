@@ -38,6 +38,14 @@ public class ResenaController {
         return resenaService.listarPublicas(idLugar, idEvento);
     }
 
+    /** Reseñas destacadas (más votadas) de toda la plataforma (público, Home). */
+    @GetMapping("/destacadas")
+    public List<ResenaDto> destacadas(
+            @RequestParam(required = false, defaultValue = "6") int limit
+    ) {
+        return resenaService.listarDestacadas(limit);
+    }
+
     /** Publicar una reseña (autenticado). */
     @PostMapping
     public ResponseEntity<ResenaDto> publicar(

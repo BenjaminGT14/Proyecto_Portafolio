@@ -9,7 +9,7 @@ export function LoginPage() {
   const vm = useLoginViewModel()
 
   return (
-    <AuthLayout title="Ingresar" subtitle="Bienvenido de vuelta a Entreteca">
+    <AuthLayout title="Ingresar" subtitle="Bienvenido de vuelta a EventOut">
       <form onSubmit={vm.handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email">Correo</Label>

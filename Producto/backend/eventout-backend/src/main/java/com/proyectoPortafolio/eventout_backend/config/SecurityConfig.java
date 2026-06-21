@@ -61,7 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/categorias", "/categorias/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/lugares", "/lugares/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/eventos", "/eventos/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/resenas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/resenas", "/resenas/destacadas").permitAll()
                         // Administración
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // El resto requiere autenticación

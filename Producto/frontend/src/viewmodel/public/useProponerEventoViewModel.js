@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { listarLugares, proponerEvento } from '@/model/entretecaRepository'
+import { listarLugares, proponerEvento } from '@/model/eventoutRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
 const EMPTY_FORM = {

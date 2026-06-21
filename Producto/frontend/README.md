@@ -1,4 +1,4 @@
-# Entreteca
+# EventOut
 
 > _"El panorama perfecto está más cerca de lo que crees."_
 

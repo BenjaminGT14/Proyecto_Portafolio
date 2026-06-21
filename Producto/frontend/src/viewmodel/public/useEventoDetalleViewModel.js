@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { obtenerEvento } from '@/model/entretecaRepository'
+import { obtenerEvento } from '@/model/eventoutRepository'
 import { imgPlaceholder } from '@/core/utils'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 

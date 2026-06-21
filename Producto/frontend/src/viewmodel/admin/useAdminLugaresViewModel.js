@@ -5,7 +5,7 @@ import {
   eliminarLugar,
   listarCategorias,
   listarLugares,
-} from '@/model/entretecaRepository'
+} from '@/model/eventoutRepository'
 import { comunasSantiago } from '@/model/mockData'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
@@ -59,6 +59,7 @@ export function useAdminLugaresViewModel() {
   const [modal, setModal] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
 
   function abrirCrear() {
@@ -77,21 +78,30 @@ export function useAdminLugaresViewModel() {
 
   async function handleGuardar(e) {
     e.preventDefault()
+    setError(null)
     setSaving(true)
     const payload = buildPayload(form)
-    if (modal.modo === 'crear') {
-      await crearLugar(payload)
-    } else {
-      await actualizarLugar(modal.lugar.id_lugar, payload)
-    }
+    const { error: err } =
+      modal.modo === 'crear'
+        ? await crearLugar(payload)
+        : await actualizarLugar(modal.lugar.id_lugar, payload)
     setSaving(false)
+    if (err) {
+      setError(err.message ?? 'No se pudo guardar el lugar')
+      return
+    }
     setModal(null)
     bump()
   }
 
   async function handleEliminar() {
     if (!confirmDelete) return
-    await eliminarLugar(confirmDelete.id_lugar)
+    setError(null)
+    const { error: err } = await eliminarLugar(confirmDelete.id_lugar)
+    if (err) {
+      setError(err.message ?? 'No se pudo eliminar el lugar')
+      return
+    }
     setConfirmDelete(null)
     bump()
   }
@@ -106,6 +116,7 @@ export function useAdminLugaresViewModel() {
     confirmDelete,
     setConfirmDelete,
     saving,
+    error,
     form,
     abrirCrear,
     abrirEditar,

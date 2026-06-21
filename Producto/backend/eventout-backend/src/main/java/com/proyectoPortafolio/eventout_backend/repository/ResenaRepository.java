@@ -13,5 +13,7 @@ public interface ResenaRepository extends JpaRepository<Resena, String> {
 
     List<Resena> findByEventoIdAndEstado(String eventoId, EstadoResena estado);
 
+    List<Resena> findByEstado(EstadoResena estado);
+
     List<Resena> findAllByOrderByCreatedAtDesc();
 }

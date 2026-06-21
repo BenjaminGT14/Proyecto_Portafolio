@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listarCategorias, listarLugares } from '@/model/entretecaRepository'
+import { listarCategorias, listarLugares } from '@/model/eventoutRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
-import { avatarUrl } from '@/core/utils'
 
 const CATEGORIA_ICONO = {
   'Parques y naturaleza': { icon: 'park', bg: 'bg-tertiary-fixed', color: 'text-on-tertiary-container' },
@@ -18,36 +17,6 @@ const CATEGORIA_DEFAULT = {
   bg: 'bg-surface-container-high',
   color: 'text-on-surface',
 }
-
-const REVIEWS_DEMO = [
-  {
-    nombre: 'Andrea Valdés',
-    avatar: avatarUrl('Andrea Valdés'),
-    cuando: 'Hace 2 días',
-    estrellas: 5,
-    texto: '"El Museo de Bellas Artes es increíble los domingos, ¡la entrada gratuita es un gran beneficio! Muy recomendado para ir en familia."',
-    up: 24,
-    down: 2,
-  },
-  {
-    nombre: 'Ricardo Soto',
-    avatar: avatarUrl('Ricardo Soto'),
-    cuando: 'Hace 5 días',
-    estrellas: 4,
-    texto: '"Fui al Cerro Santa Lucía el sábado pasado. Un poco lleno pero ideal para desconectarse de la ciudad. Traigan protector solar."',
-    up: 18,
-    down: 0,
-  },
-  {
-    nombre: 'Elena Rojas',
-    avatar: avatarUrl('Elena Rojas'),
-    cuando: 'Ayer',
-    estrellas: 5,
-    texto: '"El festival de jazz estuvo impecable. Muy buena organización y seguridad. Usé Entreteca para encontrar el mapa del evento."',
-    up: 42,
-    down: 1,
-  },
-]
 
 function mapLugarToPunto(lugar) {
   return {
@@ -96,7 +65,6 @@ export function useHomeViewModel() {
     categorias: categorias ?? [],
     lugares: lugares ?? [],
     puntos,
-    reviewsDemo: REVIEWS_DEMO,
     getCategoriaConfig: (nombre) => CATEGORIA_ICONO[nombre] ?? CATEGORIA_DEFAULT,
     handleBuscar,
     goToLugares: () => navigate('/lugares'),

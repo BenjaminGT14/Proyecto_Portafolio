@@ -39,6 +39,11 @@ export async function listarResenas({ idLugar, idEvento } = {}) {
   return apiFetch(`/resenas${buildQuery({ idLugar, idEvento })}`)
 }
 
+// Reseñas destacadas (más votadas) de toda la plataforma, para el feed del Home.
+export async function listarResenasDestacadas({ limit = 6 } = {}) {
+  return apiFetch(`/resenas/destacadas${buildQuery({ limit })}`)
+}
+
 export async function publicarResena({
   idUsuario,
   idLugar = null,

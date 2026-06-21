@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { listarEventos } from '@/model/entretecaRepository'
+import { listarEventos } from '@/model/eventoutRepository'
 import { comunasSantiago } from '@/model/mockData'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
