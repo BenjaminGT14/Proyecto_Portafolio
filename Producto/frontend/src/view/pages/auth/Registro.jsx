@@ -3,7 +3,7 @@ import { Button } from '@/view/components/ui/Button'
 import { Input } from '@/view/components/ui/Input'
 import { Label } from '@/view/components/ui/Label'
 import { useRegistroViewModel } from '@/viewmodel/auth/useRegistroViewModel'
-import { AuthLayout, ErrorBanner, SuccessBanner } from './AuthShared'
+import { AuthLayout, Banner } from './AuthShared'
 
 export function RegistroPage() {
   const vm = useRegistroViewModel()
@@ -11,7 +11,7 @@ export function RegistroPage() {
   if (vm.done) {
     return (
       <AuthLayout title="Revisa tu correo" subtitle="Te enviamos un enlace para confirmar tu cuenta">
-        <SuccessBanner message="Cuenta creada. Confirma tu correo para activar el ingreso." />
+        <Banner tone="success" message="Cuenta creada. Confirma tu correo para activar el ingreso." />
         <Link
           to="/login"
           className="mt-6 inline-block text-sm font-medium text-secondary hover:underline"
@@ -72,7 +72,7 @@ export function RegistroPage() {
           />
         </div>
 
-        {vm.error && <ErrorBanner message={vm.error} />}
+        {vm.error && <Banner message={vm.error} />}
 
         <Button type="submit" className="w-full" disabled={vm.loading}>
           {vm.loading ? 'Creando cuenta…' : 'Crear cuenta'}

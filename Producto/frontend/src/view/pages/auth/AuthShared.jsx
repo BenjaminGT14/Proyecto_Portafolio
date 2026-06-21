@@ -17,17 +17,14 @@ export function AuthLayout({ title, subtitle, children }) {
   )
 }
 
-export function ErrorBanner({ message }) {
-  return (
-    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-      {message}
-    </div>
-  )
+const BANNER_TONES = {
+  error: 'border-red-200 bg-red-50 text-red-700',
+  success: 'border-green-200 bg-green-50 text-green-700',
 }
 
-export function SuccessBanner({ message }) {
+export function Banner({ tone = 'error', message }) {
   return (
-    <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+    <div className={`rounded-lg border px-3 py-2 text-sm ${BANNER_TONES[tone]}`}>
       {message}
     </div>
   )

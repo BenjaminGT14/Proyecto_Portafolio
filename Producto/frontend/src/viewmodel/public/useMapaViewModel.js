@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { listarEventos, listarLugares } from '@/model/entretecaRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
-export const TIPOS_MAPA = [
+const TIPOS_MAPA = [
   { id: 'todos', label: 'Todos' },
   { id: 'lugar', label: 'Lugares' },
   { id: 'evento', label: 'Eventos' },

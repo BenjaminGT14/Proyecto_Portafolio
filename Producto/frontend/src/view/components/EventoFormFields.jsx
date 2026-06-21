@@ -5,7 +5,11 @@
 const INPUT_CLS =
   'w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-secondary focus:ring-1 focus:ring-secondary'
 
-export function Field({ label, children }) {
+// Default estable: un [] inline crearía un array nuevo en cada render y rompería
+// la memoización de los hijos que comparan props.
+const EMPTY_LUGARES = []
+
+function Field({ label, children }) {
   // El control se anida dentro del <label> para asociarlo a su texto
   // (un lector de pantalla anuncia la etiqueta al enfocar el campo).
   return (
@@ -16,7 +20,7 @@ export function Field({ label, children }) {
   )
 }
 
-export function EventoFormFields({ form, setField, lugares = [] }) {
+export function EventoFormFields({ form, setField, lugares = EMPTY_LUGARES }) {
   return (
     <>
       <Field label="Nombre *">
