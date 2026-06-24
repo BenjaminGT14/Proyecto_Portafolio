@@ -43,7 +43,7 @@ export function PerfilPage() {
         )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-xl font-bold text-on-surface">{nombre}</p>
-          <p className="truncate text-sm text-outline">{user?.email ?? 'demo@entreteca.cl'}</p>
+          <p className="truncate text-sm text-outline">{user?.email ?? 'demo@eventout.cl'}</p>
           <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
             {isAdmin && (
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary-fixed px-2.5 py-1 text-[11px] font-semibold text-on-secondary-fixed-variant">
@@ -77,6 +77,20 @@ export function PerfilPage() {
           <Icon name="chevron_right" size="sm" className="shrink-0 text-outline" />
         </Link>
 
+        <Link
+          to="/eventos/proponer"
+          className="flex items-center gap-4 rounded-2xl border border-outline-variant bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary-fixed">
+            <Icon name="add" size="md" className="text-secondary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-on-surface">Proponer evento</p>
+            <p className="text-xs text-outline">Comparte un panorama con la comunidad</p>
+          </div>
+          <Icon name="chevron_right" size="sm" className="shrink-0 text-outline" />
+        </Link>
+
         {isAdmin && (
           <Link
             to="/admin"
@@ -104,12 +118,6 @@ export function PerfilPage() {
           <Icon name="logout" size="sm" />
           Cerrar sesión
         </button>
-      )}
-
-      {isDemo && (
-        <p className="text-center text-xs text-outline">
-          Estás en modo demo. Para sesión real, conecta Supabase mediante variables de entorno.
-        </p>
       )}
     </div>
   )

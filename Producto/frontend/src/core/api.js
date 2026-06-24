@@ -1,6 +1,6 @@
-// Cliente REST para el backend Spring Boot (Eventout).
-// Reemplaza al cliente de Supabase. Centraliza la URL base, el token JWT y el
-// manejo de respuestas en el contrato { data, error } que usa la app.
+// Cliente REST para el backend Spring Boot (EventOut).
+// Centraliza la URL base, el token JWT y el manejo de respuestas en el
+// contrato { data, error } que usa la app.
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 const TOKEN_KEY = 'eventout_token'

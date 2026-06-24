@@ -23,7 +23,7 @@ export function RegistroPage() {
   }
 
   return (
-    <AuthLayout title="Crear cuenta" subtitle="Únete a la comunidad de Entreteca">
+    <AuthLayout title="Crear cuenta" subtitle="Únete a la comunidad de EventOut">
       <form onSubmit={vm.handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="nombre">Nombre</Label>

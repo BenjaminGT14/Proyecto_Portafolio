@@ -32,7 +32,7 @@ export function formatFecha(fecha) {
 // Sirve como fallback cuando la URL real falla. Para sustituir por fotos reales
 // del lugar/evento, dropear archivos en /public/lugares/ y actualizar imagen_url.
 export function imgPlaceholder(seed, w = 800, h = 500) {
-  const safeSeed = encodeURIComponent(String(seed || 'entreteca'))
+  const safeSeed = encodeURIComponent(String(seed || 'eventout'))
   return `https://picsum.photos/seed/${safeSeed}/${w}/${h}`
 }
 

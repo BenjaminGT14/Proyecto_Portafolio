@@ -18,8 +18,8 @@ public class OpenApiConfig {
     public OpenAPI eventoutOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Eventout API")
-                        .description("API REST de Eventout/Entreteca (eventos y lugares de Santiago).")
+                        .title("EventOut API")
+                        .description("API REST de EventOut (eventos y lugares de Santiago).")
                         .version("v1"))
                 .addSecurityItem(new SecurityRequirement().addList(SCHEME))
                 .components(new Components().addSecuritySchemes(SCHEME,

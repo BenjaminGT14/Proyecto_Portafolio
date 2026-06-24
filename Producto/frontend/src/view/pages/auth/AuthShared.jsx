@@ -6,7 +6,7 @@ export function AuthLayout({ title, subtitle, children }) {
     <div className="mx-auto w-full max-w-md py-8">
       <Link to="/" className="mb-6 flex items-center justify-center gap-2 text-secondary">
         <Compass className="size-7" />
-        <span className="text-xl font-bold tracking-tight">Entreteca</span>
+        <span className="text-xl font-bold tracking-tight">EventOut</span>
       </Link>
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-bold text-slate-900">{title}</h1>

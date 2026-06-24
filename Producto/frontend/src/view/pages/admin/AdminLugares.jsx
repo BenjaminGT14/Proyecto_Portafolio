@@ -1,4 +1,5 @@
 import { Icon } from '@/view/components/ui/Icon'
+import { ErrorBanner } from '@/view/components/ui/ErrorBanner'
 import { useAdminLugaresViewModel } from '@/viewmodel/admin/useAdminLugaresViewModel'
 
 export function AdminLugaresPage() {
@@ -22,6 +23,8 @@ export function AdminLugaresPage() {
           Nuevo lugar
         </button>
       </div>
+
+      <ErrorBanner mensaje={vm.error} />
 
       {vm.loading ? (
         <TableSkeleton cols={5} />

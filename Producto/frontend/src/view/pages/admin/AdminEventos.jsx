@@ -1,4 +1,5 @@
 import { Icon } from '@/view/components/ui/Icon'
+import { ErrorBanner } from '@/view/components/ui/ErrorBanner'
 import { formatFecha } from '@/core/utils'
 import { useAdminEventosViewModel } from '@/viewmodel/admin/useAdminEventosViewModel'
 import { EventoFormFields } from '@/view/components/EventoFormFields'
@@ -40,6 +41,8 @@ export function AdminEventosPage() {
           Nuevo evento
         </button>
       </div>
+
+      <ErrorBanner mensaje={vm.error} />
 
       {/* Propuestas pendientes de la comunidad */}
       {vm.pendientes.length > 0 && (

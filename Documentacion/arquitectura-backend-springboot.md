@@ -1,19 +1,16 @@
-# Arquitectura del Backend (Spring Boot + MySQL) y migración del Frontend
+# Arquitectura del Backend (Spring Boot + MySQL) y del Frontend
 
-> Documento técnico de la migración de **Supabase** a un **backend propio** hecho con
-> **Spring Boot** y base de datos **MySQL** (`eventout_db`), más los cambios necesarios en el
-> **frontend** (React) para consumir la nueva API por REST con autenticación **JWT**.
+> Documento técnico del **backend propio** hecho con **Spring Boot** y base de datos
+> **MySQL** (`eventout_db`), más la forma en que el **frontend** (React) consume la API
+> por REST con autenticación **JWT**.
 
 ---
 
 ## 1. Visión general
 
-### ¿De qué se trata el cambio?
-Antes, el frontend hablaba **directamente con Supabase**:
-- Lecturas y autenticación con el cliente `supabase-js`.
-- Escrituras de administración con *Edge Functions* (funciones serverless).
-
-Ahora existe un **backend propio** que centraliza toda la lógica y los datos:
+### ¿De qué se trata?
+El sistema tiene un **backend propio** que centraliza toda la lógica y los datos, y un
+**frontend** (React) que lo consume por REST con autenticación JWT:
 
 ```
 ┌────────────┐     HTTP/JSON (REST)      ┌─────────────────────┐      JPA/JDBC      ┌──────────┐
@@ -114,10 +111,10 @@ usa una PK de texto como `cat-parque`):
 Las reseñas y favoritos apuntan a **exactamente uno**: un lugar *o* un evento. Esta regla se
 valida en el **service** antes de guardar.
 
-### Vista "reseña con votos"
-Supabase tenía una vista `resena_con_votos`. Aquí se replica calculando en el `ResenaService`
-los `votos_positivos`, `votos_negativos` y `score` (positivos − negativos) mediante una consulta
-agregada (`VotoResenaRepository.contarVotosPorResena`).
+### Cálculo de "reseña con votos"
+El `ResenaService` calcula los `votos_positivos`, `votos_negativos` y `score`
+(positivos − negativos) mediante una consulta agregada
+(`VotoResenaRepository.contarVotosPorResena`).
 
 ---
 
@@ -257,24 +254,21 @@ Puntos clave:
 
 ---
 
-## 11. Cambios en el Frontend
+## 11. Integración del Frontend
 
-El frontend mantiene su patrón **MVVM** (`view` / `viewmodel` / `model`). Solo cambió la **capa
-de datos** y la **autenticación**; **los viewmodels y componentes no se modificaron** porque se
-respetó el mismo contrato `{ data, error }`.
+El frontend sigue el patrón **MVVM** (`view` / `viewmodel` / `model`). La **capa de datos** y la
+**autenticación** se apoyan en el contrato `{ data, error }`, de modo que viewmodels y
+componentes consumen la API sin acoplarse a los detalles del transporte.
 
-| Archivo | Cambio | Para qué |
-|---|---|---|
-| `src/core/api.js` | **Nuevo.** Cliente REST con `fetch`, base URL (`VITE_API_URL`), token JWT en `localStorage` y helper `buildQuery`. Devuelve siempre `{ data, error }`. | Reemplaza al cliente de Supabase; centraliza llamadas y token. |
-| `src/model/entretecaRepository.js` | **Reescrito.** Cada función ahora llama a la API REST en vez de a Supabase, **manteniendo las mismas firmas**. | Que los viewmodels sigan funcionando sin cambios. |
-| `src/core/auth/AuthContext.jsx` | **Reescrito.** `signUp/signIn/signOut/resetPassword/nuevaPassword` usan los endpoints `/auth/*`; al cargar valida el token con `/auth/me`. | Autenticación con JWT en vez de `supabase.auth`. |
-| `src/view/pages/auth/NuevaPassword.jsx` | **Reescrito.** Lee el `token` desde la URL (`?token=`) y llama a `/auth/nueva-password`. | Reset de contraseña con el token del correo. |
-| `Login.jsx`, `Registro.jsx`, `RecuperarPassword.jsx`, `AuthShared.jsx` | Limpieza: se quitaron los avisos y referencias a Supabase. | Eliminar dependencia de Supabase. |
-| `src/core/supabase.js` | **Eliminado.** | Ya no se usa. |
-| `package.json` | Quitada la dependencia `@supabase/supabase-js`. | Limpieza. |
-| `.env.example` | Ahora documenta `VITE_API_URL`. | Apuntar al backend propio. |
+| Archivo | Rol |
+|---|---|
+| `src/core/api.js` | Cliente REST con `fetch`: base URL (`VITE_API_URL`), token JWT en `localStorage` y helper `buildQuery`. Devuelve siempre `{ data, error }`. |
+| `src/model/eventoutRepository.js` | Capa de acceso a datos: cada función llama a la API REST manteniendo firmas estables para los viewmodels. |
+| `src/core/auth/AuthContext.jsx` | `signUp/signIn/signOut/resetPassword/nuevaPassword` usan los endpoints `/auth/*`; al cargar valida el token con `/auth/me`. |
+| `src/view/pages/auth/NuevaPassword.jsx` | Lee el `token` desde la URL (`?token=`) y llama a `/auth/nueva-password`. |
+| `.env.example` | Documenta `VITE_API_URL` (URL del backend). |
 
-### Detalle del contrato preservado
+### Detalle del contrato `{ data, error }`
 - El repositorio sigue devolviendo `{ data, error }`, por eso `useAsyncData` y todos los
   viewmodels funcionan igual.
 - `obtenerEstadoFavoritos` sigue devolviendo **Sets** (`data.lugares.has(id)`), aunque el backend

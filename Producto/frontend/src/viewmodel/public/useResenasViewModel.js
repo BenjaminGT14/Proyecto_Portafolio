@@ -4,7 +4,7 @@ import {
   obtenerVotosUsuario,
   publicarResena,
   votarResena,
-} from '@/model/entretecaRepository'
+} from '@/model/eventoutRepository'
 import { useAuth } from '@/core/auth/useAuth'
 
 export function useResenasViewModel({ idLugar, idEvento }) {

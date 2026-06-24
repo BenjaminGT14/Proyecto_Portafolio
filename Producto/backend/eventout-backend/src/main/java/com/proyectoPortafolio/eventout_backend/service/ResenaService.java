@@ -96,6 +96,26 @@ public class ResenaService {
         return DtoMapper.toResenaDto(resena, 0, 0);
     }
 
+    /**
+     * Reseñas destacadas de toda la plataforma (público, para el Home): solo
+     * visibles, ordenadas por score (likes - dislikes) y fecha, limitadas. Incluye
+     * el lugar/evento de origen para poder enlazar desde la tarjeta.
+     */
+    @Transactional(readOnly = true)
+    public List<ResenaDto> listarDestacadas(int limit) {
+        List<Resena> resenas = resenaRepository.findByEstado(EstadoResena.VISIBLE);
+        Map<String, long[]> conteos = conteos(resenas);
+        return resenas.stream()
+                .map(r -> {
+                    long[] c = conteos.getOrDefault(r.getId(), new long[]{0, 0});
+                    return DtoMapper.toResenaAdminDto(r, c[0], c[1]);
+                })
+                .sorted(Comparator.comparingLong(ResenaDto::score).reversed()
+                        .thenComparing(ResenaDto::createdAt, Comparator.reverseOrder()))
+                .limit(limit > 0 ? limit : 6)
+                .toList();
+    }
+
     /** Listado completo para moderación (todos los estados). */
     @Transactional(readOnly = true)
     public List<ResenaDto> listarAdmin() {
