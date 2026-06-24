@@ -1,10 +1,10 @@
-# Documentación Completa — Entreteca
+# Documentación Completa — EventOut
 
 > Proyecto Final · Duoc UC 2026
 > **Frontend:** React 19 · Vite 8 · Tailwind CSS v4
 > **Backend propio:** Spring Boot 3.5 · MySQL 8 · JWT
 >
-> Para el detalle técnico profundo del backend y de la migración desde Supabase,
+> Para el detalle técnico profundo del backend,
 > ver [arquitectura-backend-springboot.md](arquitectura-backend-springboot.md).
 > Convenciones de trabajo del repo: ver [CLAUDE.md](../CLAUDE.md) en la raíz.
 
@@ -12,7 +12,7 @@
 
 ## Índice
 
-1. [¿Qué es Entreteca?](#1-qué-es-entreteca)
+1. [¿Qué es EventOut?](#1-qué-es-eventout)
 2. [Arquitectura general](#2-arquitectura-general)
 3. [Herramientas y por qué se eligieron](#3-herramientas-y-por-qué-se-eligieron)
 4. [Estructura del proyecto](#4-estructura-del-proyecto)
@@ -33,9 +33,9 @@
 
 ---
 
-## 1. ¿Qué es Entreteca?
+## 1. ¿Qué es EventOut?
 
-Entreteca es una plataforma web para descubrir lugares, eventos culturales y actividades en Santiago de Chile. Los usuarios pueden:
+EventOut es una plataforma web para descubrir lugares, eventos culturales y actividades en Santiago de Chile. Los usuarios pueden:
 
 - Explorar lugares y eventos con filtros (categoría, comuna, costo, búsqueda, fecha)
 - Ver un mapa interactivo con todos los puntos georeferenciados
@@ -44,7 +44,7 @@ Entreteca es una plataforma web para descubrir lugares, eventos culturales y act
 - **Proponer eventos**, que quedan pendientes de aprobación de un administrador
 - Administrar el contenido desde un panel de administración (solo rol `admin`)
 
-> **Nota de nombres:** el producto (frontend) se llama **Entreteca**; el backend
+> **Nota de nombres:** el producto (frontend) se llama **EventOut**; el backend
 > es el módulo **eventout-backend** y su base de datos es `eventout_db`. Son el
 > mismo proyecto.
 
@@ -120,7 +120,7 @@ Proyecto_Portafolio/
     ├── frontend/             ← React (Vite)
     │   ├── src/
     │   │   ├── core/         ← api.js (cliente REST), utils.js, auth/
-    │   │   ├── model/        ← entretecaRepository.js, mockData.js
+    │   │   ├── model/        ← eventoutRepository.js, mockData.js
     │   │   ├── viewmodel/    ← hooks de lógica por pantalla (public/auth/admin)
     │   │   ├── view/         ← components/ (ui, layout) y pages/
     │   │   └── test/         ← TODAS las pruebas, planas aquí (ver §15)
@@ -161,15 +161,15 @@ El frontend sigue **MVVM (Model–View–ViewModel)**:
 └──────────────────────┬───────────────────────────────────┘
                        │ llama
 ┌──────────────────────▼───────────────────────────────────┐
-│  MODEL  (src/model/entretecaRepository.js)               │
+│  MODEL  (src/model/eventoutRepository.js)               │
 │  Acceso a datos. Llama al backend vía api.js y expone     │
 │  funciones puras: listarLugares(), publicarResena()…      │
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Ventaja:** la View nunca llama al backend directamente. Cuando se migró de
-Supabase a Spring Boot, **solo cambiaron `api.js` y el repositorio**; los
-viewmodels y componentes quedaron intactos porque se respetó el contrato `{ data, error }`.
+**Ventaja:** la View nunca llama al backend directamente. Toda la comunicación pasa por
+`api.js` y el repositorio; los viewmodels y componentes solo dependen del contrato
+`{ data, error }`, lo que mantiene el acoplamiento al mínimo.
 
 ---
 
@@ -202,7 +202,7 @@ Puntos clave:
 - **`buildQuery(params)`** arma el querystring omitiendo valores vacíos y uniendo
   arrays por coma (ej. `idsResenas=a,b`).
 
-El repositorio [entretecaRepository.js](../Producto/frontend/src/model/entretecaRepository.js)
+El repositorio [eventoutRepository.js](../Producto/frontend/src/model/eventoutRepository.js)
 envuelve `apiFetch` con las firmas que esperan los viewmodels y añade validaciones
 locales (regla XOR lugar/evento, exigir sesión, enums de estado). Detalles que
 preserva del contrato anterior:
@@ -247,10 +247,9 @@ const value = {
 - **`signOut`** simplemente borra el token y el perfil (stateless: no hay endpoint de logout).
 - **`isAdmin`** se deriva del `rol` del perfil; las rutas `/admin` lo exigen (ver §13).
 
-> **Nota — modo demo retirado.** La versión Supabase tenía un "modo demo" sin
-> backend (`isDemo`). Hoy `isDemo` es siempre `false` y la app requiere el backend
-> corriendo. Quedan restos de UI de demo en `Header.jsx` y `Perfil.jsx` que ya no
-> se activan (código muerto, pendiente de limpiar).
+> **Nota — modo demo retirado.** Existió un "modo demo" sin backend (`isDemo`). Hoy
+> `isDemo` es siempre `false` y la app requiere el backend corriendo. Pueden quedar
+> restos de UI de demo que ya no se activan (código muerto).
 
 ---
 
@@ -309,8 +308,7 @@ repositorio del frontend antes de enviar.
 
 ### Conteo de votos
 
-Lo que en Supabase era la vista `resena_con_votos` ahora lo calcula el
-`ResenaService`: agrega `votos_positivos`, `votos_negativos` y `score`
+El `ResenaService` calcula y agrega `votos_positivos`, `votos_negativos` y `score`
 (positivos − negativos) al devolver las reseñas.
 
 ### Datos sembrados (`DataInitializer`)

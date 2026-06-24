@@ -1,6 +1,6 @@
 // Capa de acceso a datos. Habla con el backend Spring Boot vía REST (api.js).
-// Mantiene las mismas firmas y el contrato { data, error } que esperaban los
-// viewmodels cuando la fuente era Supabase.
+// Cada función mantiene una firma estable y el contrato { data, error } que
+// esperan los viewmodels.
 import { apiFetch, buildQuery } from '@/core/api'
 
 // ---- categorías -------------------------------------

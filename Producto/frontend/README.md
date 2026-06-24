@@ -9,7 +9,7 @@ Aplicación web responsiva que centraliza eventos, actividades y lugares de inte
 - **Frontend:** React 19 + Vite + JavaScript
 - **Estilos:** Tailwind CSS v4 + componentes propios estilo shadcn
 - **Routing:** React Router 7
-- **Backend:** Supabase (PostgreSQL + Auth + Storage + RLS)
+- **Backend:** API REST propia en Spring Boot (Java) + MySQL
 - **Mapas:** Google Maps Platform (pendiente, Sprint 3)
 - **Despliegue:** Vercel
 
@@ -21,12 +21,10 @@ Producto/
 │  ├─ components/       # UI primitivos, layout y cards
 │  ├─ contexts/         # AuthProvider y context object
 │  ├─ hooks/            # useAuth, useAsyncData
-│  ├─ lib/              # cliente Supabase, api.js, mockData, utils
+│  ├─ lib/              # api.js, mockData, utils
 │  ├─ pages/            # Home, Lugares, Eventos, auth/*, placeholders
 │  ├─ App.jsx           # rutas
 │  └─ main.jsx
-├─ supabase/
-│  └─ schema.sql        # tablas, índices, RLS y seeds
 ├─ .env.example
 └─ vite.config.js
 ```
@@ -39,29 +37,26 @@ npm install
 
 # 2. Copiar variables de entorno
 cp .env.example .env.local
-# Editar .env.local con las credenciales reales de Supabase y Google Maps
+# Editar .env.local con la URL del backend (VITE_API_URL)
 
 # 3. Levantar el dev server
 npm run dev
 ```
 
-Si **no** se completan las variables de entorno, la app funciona igual con **datos mock** (ver `src/lib/mockData.js`). Esto permite trabajar la UI sin depender de Supabase.
+El frontend consume la API REST definida en `VITE_API_URL` (por defecto `http://localhost:8080`).
 
-## Configurar Supabase
+## Configurar el backend
 
-1. Crear un proyecto en [supabase.com](https://supabase.com).
-2. Ir a **SQL Editor** y ejecutar el contenido completo de `supabase/schema.sql`.
-3. En **Settings → API**, copiar la URL del proyecto y el `anon public` key.
-4. Pegarlos en `.env.local`:
+El frontend consume la API REST de Spring Boot (`Producto/backend/eventout-backend`).
+
+1. Levantar el backend (crea la base MySQL `eventout_db` automáticamente la primera vez).
+2. Apuntar el frontend al backend en `.env.local`:
 
 ```env
-VITE_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGc...
+VITE_API_URL=http://localhost:8080
 ```
 
-5. Reiniciar `npm run dev`.
-
-> El `schema.sql` incluye: tablas, constraints (XOR para reseñas/favoritos, UNIQUE para votos, CHECK de fechas), índices, trigger para crear filas en `public.usuario` al registrarse, RLS por rol, y datos semilla de categorías.
+3. Reiniciar `npm run dev`.
 
 ## Funcionalidades implementadas (Sprints 1-4)
 
@@ -93,8 +88,7 @@ npm run lint      # ESLint
 
 | Variable | Descripción |
 |----------|-------------|
-| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
-| `VITE_SUPABASE_ANON_KEY` | Clave pública anon del proyecto Supabase |
+| `VITE_API_URL` | URL base del backend Spring Boot (por defecto `http://localhost:8080`) |
 | `VITE_GOOGLE_MAPS_API_KEY` | API key con Maps JavaScript API y Places API habilitadas |
 
 ## Equipo
