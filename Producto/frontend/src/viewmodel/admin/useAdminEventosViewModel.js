@@ -6,7 +6,7 @@ import {
   eliminarEvento,
   listarEventosAdmin,
   listarLugares,
-} from '@/model/entretecaRepository'
+} from '@/model/eventoutRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 
 const EMPTY_FORM = {
@@ -54,6 +54,7 @@ export function useAdminEventosViewModel() {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [saving, setSaving] = useState(false)
   const [moderando, setModerando] = useState(null)
+  const [error, setError] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
 
   function abrirCrear() {
@@ -72,29 +73,43 @@ export function useAdminEventosViewModel() {
 
   async function handleGuardar(e) {
     e.preventDefault()
+    setError(null)
     setSaving(true)
     const payload = buildPayload(form)
-    if (modal.modo === 'crear') {
-      await crearEvento(payload)
-    } else {
-      await actualizarEvento(modal.evento.id_evento, payload)
-    }
+    const { error: err } =
+      modal.modo === 'crear'
+        ? await crearEvento(payload)
+        : await actualizarEvento(modal.evento.id_evento, payload)
     setSaving(false)
+    if (err) {
+      setError(err.message ?? 'No se pudo guardar el evento')
+      return
+    }
     setModal(null)
     bump()
   }
 
   async function handleEliminar() {
     if (!confirmDelete) return
-    await eliminarEvento(confirmDelete.id_evento)
+    setError(null)
+    const { error: err } = await eliminarEvento(confirmDelete.id_evento)
+    if (err) {
+      setError(err.message ?? 'No se pudo eliminar el evento')
+      return
+    }
     setConfirmDelete(null)
     bump()
   }
 
   async function moderar(idEvento, estado) {
+    setError(null)
     setModerando(idEvento)
-    await cambiarEstadoEvento({ idEvento, estado })
+    const { error: err } = await cambiarEstadoEvento({ idEvento, estado })
     setModerando(null)
+    if (err) {
+      setError(err.message ?? 'No se pudo cambiar el estado del evento')
+      return
+    }
     bump()
   }
 
@@ -111,6 +126,7 @@ export function useAdminEventosViewModel() {
     setConfirmDelete,
     saving,
     moderando,
+    error,
     form,
     abrirCrear,
     abrirEditar,

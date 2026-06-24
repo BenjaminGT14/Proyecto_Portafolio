@@ -1,5 +1,5 @@
 {
-  "name": "entreteca",
+  "name": "eventout",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "fetch:wikipedia": "node scripts/fetch-wikipedia-lugares.mjs"
+    "fetch:wikipedia": "node scripts/fetch-wikipedia-lugares.mjs",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

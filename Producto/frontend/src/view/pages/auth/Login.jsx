@@ -3,13 +3,13 @@ import { Button } from '@/view/components/ui/Button'
 import { Input } from '@/view/components/ui/Input'
 import { Label } from '@/view/components/ui/Label'
 import { useLoginViewModel } from '@/viewmodel/auth/useLoginViewModel'
-import { AuthLayout, ErrorBanner } from './AuthShared'
+import { AuthLayout, Banner } from './AuthShared'
 
 export function LoginPage() {
   const vm = useLoginViewModel()
 
   return (
-    <AuthLayout title="Ingresar" subtitle="Bienvenido de vuelta a Entreteca">
+    <AuthLayout title="Ingresar" subtitle="Bienvenido de vuelta a EventOut">
       <form onSubmit={vm.handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email">Correo</Label>
@@ -41,7 +41,7 @@ export function LoginPage() {
           />
         </div>
 
-        {vm.error && <ErrorBanner message={vm.error} />}
+        {vm.error && <Banner message={vm.error} />}
 
         <Button type="submit" className="w-full" disabled={vm.loading}>
           {vm.loading ? 'Ingresando…' : 'Ingresar'}

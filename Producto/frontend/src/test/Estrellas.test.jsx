@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Estrellas } from './Estrellas'
+import { Estrellas } from '@/view/components/Estrellas'
 
 // CONCEPTO 3: probar INTERACCIÓN del usuario (clicks) + renderizado.
 // El componente Icon escribe el nombre del símbolo ("star") como texto,

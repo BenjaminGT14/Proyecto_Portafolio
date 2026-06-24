@@ -37,9 +37,9 @@ export function Footer() {
     <footer className="w-full border-t border-slate-200 bg-white py-16">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <span className="mb-4 block text-lg font-bold text-slate-900">Entreteca</span>
+          <span className="mb-4 block text-lg font-bold text-slate-900">EventOut</span>
           <p className="text-sm leading-relaxed text-slate-500">
-            © {year} Entreteca. Inspiración y cultura en cada rincón.
+            © {year} EventOut. Inspiración y cultura en cada rincón.
           </p>
           <p className="mt-3 text-xs text-slate-400">
             Proyecto de título (Duoc UC San Joaquín).

@@ -1,4 +1,5 @@
 import { Icon } from '@/view/components/ui/Icon'
+import { ErrorBanner } from '@/view/components/ui/ErrorBanner'
 import { formatFecha } from '@/core/utils'
 import { ESTADOS_RESENA, useAdminResenasViewModel } from '@/viewmodel/admin/useAdminResenasViewModel'
 import { EstadoBadge } from './AdminDashboard'
@@ -34,6 +35,8 @@ export function AdminResenasPage() {
           ))}
         </div>
       </div>
+
+      <ErrorBanner mensaje={vm.error} />
 
       {vm.loading ? (
         <TableSkeleton cols={5} rows={6} />

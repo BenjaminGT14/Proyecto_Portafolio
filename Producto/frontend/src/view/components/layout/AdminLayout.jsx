@@ -69,7 +69,7 @@ export function AdminLayout() {
             <Icon name="arrow_back" size="sm" />
             Volver al sitio
           </NavLink>
-          <span className="text-xs text-outline">Entreteca Admin</span>
+          <span className="text-xs text-outline">EventOut Admin</span>
         </header>
         <main className="flex-1 p-8">
           <Outlet />

@@ -115,7 +115,7 @@ function imagenAResolucion(originalUrl, ancho = 1280) {
 async function fetchLugar(curado) {
   const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${curado.wikipedia_slug}`
   const r = await fetch(url, {
-    headers: { 'Accept': 'application/json', 'User-Agent': 'Entreteca-Portfolio/1.0' },
+    headers: { 'Accept': 'application/json', 'User-Agent': 'EventOut-Portfolio/1.0' },
   })
   if (!r.ok) throw new Error(`${curado.nombre}: HTTP ${r.status}`)
   const data = await r.json()

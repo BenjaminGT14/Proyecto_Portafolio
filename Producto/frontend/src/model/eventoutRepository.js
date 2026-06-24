@@ -1,6 +1,6 @@
 // Capa de acceso a datos. Habla con el backend Spring Boot vía REST (api.js).
-// Mantiene las mismas firmas y el contrato { data, error } que esperaban los
-// viewmodels cuando la fuente era Supabase.
+// Cada función mantiene una firma estable y el contrato { data, error } que
+// esperan los viewmodels.
 import { apiFetch, buildQuery } from '@/core/api'
 
 // ---- categorías -------------------------------------
@@ -37,6 +37,11 @@ export async function listarResenas({ idLugar, idEvento } = {}) {
     return { data: [], error: new Error('idLugar o idEvento requerido') }
   }
   return apiFetch(`/resenas${buildQuery({ idLugar, idEvento })}`)
+}
+
+// Reseñas destacadas (más votadas) de toda la plataforma, para el feed del Home.
+export async function listarResenasDestacadas({ limit = 6 } = {}) {
+  return apiFetch(`/resenas/destacadas${buildQuery({ limit })}`)
 }
 
 export async function publicarResena({

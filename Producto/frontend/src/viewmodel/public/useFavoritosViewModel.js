@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { listarFavoritos } from '@/model/entretecaRepository'
+import { listarFavoritos } from '@/model/eventoutRepository'
 import { useAuth } from '@/core/auth/useAuth'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
 

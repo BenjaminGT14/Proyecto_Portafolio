@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Icon } from '@/view/components/ui/Icon'
 import { Estrellas } from './Estrellas'
 import { cn, avatarUrl } from '@/core/utils'
@@ -20,7 +21,7 @@ function fechaRelativa(iso) {
   return fechaFormatter.format(fecha)
 }
 
-export function ResenaCard({ resena, votoUsuario, onVotar, disabled }) {
+export function ResenaCard({ resena, votoUsuario, onVotar, disabled, origen }) {
   const autor = resena.autor ?? {}
   const fallback = avatarUrl(autor.nombre ?? 'Usuario')
 
@@ -83,6 +84,16 @@ export function ResenaCard({ resena, votoUsuario, onVotar, disabled }) {
           <Icon name="thumb_down" size="sm" filled={votoUsuario?.es_positivo === false} />
           {resena.votos_negativos}
         </button>
+
+        {origen?.to && (
+          <Link
+            to={origen.to}
+            className="ml-auto flex items-center gap-1 text-xs font-semibold text-secondary hover:underline"
+          >
+            {origen.nombre ? `Ver en ${origen.nombre}` : 'Ver'}
+            <Icon name="chevron_right" size="sm" />
+          </Link>
+        )}
       </footer>
     </article>
   )

@@ -1,4 +1,4 @@
-// Añade los matchers de jest-dom a `expect` (toBeInTheDocument, toHaveAttribute, etc.).
+  // Añade los matchers de jest-dom a `expect` (toBeInTheDocument, toHaveAttribute, etc.).
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'

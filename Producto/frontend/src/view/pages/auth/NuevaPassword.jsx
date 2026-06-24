@@ -4,7 +4,7 @@ import { useAuth } from '@/core/auth/useAuth'
 import { Button } from '@/view/components/ui/Button'
 import { Input } from '@/view/components/ui/Input'
 import { Label } from '@/view/components/ui/Label'
-import { AuthLayout, ErrorBanner, SuccessBanner } from './AuthShared'
+import { AuthLayout, Banner } from './AuthShared'
 
 export function NuevaPasswordPage() {
   const navigate = useNavigate()
@@ -47,10 +47,10 @@ export function NuevaPasswordPage() {
   return (
     <AuthLayout title="Nueva contraseña" subtitle="Elige una contraseña segura para tu cuenta">
       {done ? (
-        <SuccessBanner message="Contraseña actualizada correctamente. Redirigiendo al ingreso…" />
+        <Banner tone="success" message="Contraseña actualizada correctamente. Redirigiendo al ingreso…" />
       ) : !token ? (
         <>
-          <ErrorBanner message="Falta el token de recuperación. Solicita un nuevo enlace." />
+          <Banner message="Falta el token de recuperación. Solicita un nuevo enlace." />
           <Link
             to="/recuperar-password"
             className="mt-6 inline-block text-sm font-medium text-secondary hover:underline"
@@ -84,7 +84,7 @@ export function NuevaPasswordPage() {
               onChange={(e) => setConfirm(e.target.value)}
             />
           </div>
-          {error && <ErrorBanner message={error} />}
+          {error && <Banner message={error} />}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Guardando…' : 'Guardar contraseña'}
           </Button>
