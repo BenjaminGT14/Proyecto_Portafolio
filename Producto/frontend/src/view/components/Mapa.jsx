@@ -80,7 +80,7 @@ export function Mapa({ puntos = SIN_PUNTOS, centro, zoom = 12, altura = 'h-96' }
   }, [centro, puntosValidos])
 
   return (
-    <div className={cn('w-full overflow-hidden rounded-xl border border-slate-200', altura)}>
+    <div className={cn('relative isolate w-full overflow-hidden rounded-xl border border-slate-200', altura)}>
       {/*
         center/zoom son solo el estado inicial de MapContainer.
         ControladorVista se encarga de actualizar la vista cuando cambian.

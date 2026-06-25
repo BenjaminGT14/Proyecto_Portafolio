@@ -22,6 +22,7 @@ import com.proyectoPortafolio.eventout_backend.model.Usuario;
 import com.proyectoPortafolio.eventout_backend.model.VotoResena;
 import com.proyectoPortafolio.eventout_backend.model.enums.EstadoEvento;
 import com.proyectoPortafolio.eventout_backend.model.enums.EstadoResena;
+import com.proyectoPortafolio.eventout_backend.model.enums.EstadoUsuario;
 import com.proyectoPortafolio.eventout_backend.model.enums.Rol;
 import com.proyectoPortafolio.eventout_backend.repository.CategoriaRepository;
 import com.proyectoPortafolio.eventout_backend.repository.EventoRepository;
@@ -75,6 +76,22 @@ public class DataInitializer implements CommandLineRunner {
         seedEventos();
         seedResenasYVotos();
         backfillEstadoEventos();
+        backfillEstadoUsuarios();
+    }
+
+    /**
+     * Las cuentas creadas antes de existir la columna `estado` quedan en NULL tras
+     * el ALTER de Hibernate. Las marcamos como ACTIVO. Idempotente.
+     */
+    private void backfillEstadoUsuarios() {
+        List<Usuario> sinEstado = usuarioRepository.findAll().stream()
+                .filter(u -> u.getEstado() == null)
+                .peek(u -> u.setEstado(EstadoUsuario.ACTIVO))
+                .toList();
+        if (!sinEstado.isEmpty()) {
+            usuarioRepository.saveAll(sinEstado);
+            log.info("[DataInitializer] Backfill estado=ACTIVO en {} usuarios", sinEstado.size());
+        }
     }
 
     /**
@@ -206,24 +223,24 @@ public class DataInitializer implements CommandLineRunner {
 
         eventoRepository.saveAll(List.of(
                 evento("evento-1", lugares.get("lugar-3"), "Ópera Carmen — Temporada 2026",
-                        "La famosa ópera de Bizet en el Teatro Municipal. 4 funciones en marzo.",
-                        ldt("2026-06-12T20:00:00"), ldt("2026-06-12T23:00:00"), false, 35000.0,
+                        "La famosa ópera de Bizet en el Teatro Municipal. 4 funciones en julio.",
+                        ldt("2026-07-17T20:00:00"), ldt("2026-07-17T23:00:00"), false, 35000.0,
                         "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800"),
                 evento("evento-2", lugares.get("lugar-1"), "Yoga al aire libre en el San Cristóbal",
                         "Clase gratuita de yoga al amanecer en la cumbre del cerro.",
-                        ldt("2026-06-08T07:30:00"), ldt("2026-06-08T08:30:00"), true, 0.0,
+                        ldt("2026-07-11T07:30:00"), ldt("2026-07-11T08:30:00"), true, 0.0,
                         "https://images.unsplash.com/photo-1545389336-cf090694435e?w=800"),
                 evento("evento-3", lugares.get("lugar-2"), "Exposición: Arte Contemporáneo Chileno",
                         "Muestra colectiva de 12 artistas chilenos contemporáneos.",
-                        ldt("2026-06-01T10:00:00"), ldt("2026-08-30T18:00:00"), true, 0.0,
+                        ldt("2026-07-01T10:00:00"), ldt("2026-08-30T18:00:00"), true, 0.0,
                         "https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=800"),
                 evento("evento-4", lugares.get("lugar-6"), "Conversatorio: Memoria y Democracia",
                         "Mesa redonda con historiadores y activistas.",
-                        ldt("2026-06-15T18:30:00"), ldt("2026-06-15T20:30:00"), true, 0.0,
+                        ldt("2026-07-22T18:30:00"), ldt("2026-07-22T20:30:00"), true, 0.0,
                         "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800"),
                 evento("evento-5", lugares.get("lugar-8"), "Feria de Emprendedores Bicentenario",
                         "Más de 80 emprendedores locales con productos artesanales y gastronomía.",
-                        ldt("2026-06-21T11:00:00"), ldt("2026-06-21T19:00:00"), true, 0.0,
+                        ldt("2026-07-26T11:00:00"), ldt("2026-07-26T19:00:00"), true, 0.0,
                         "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800")
         ));
         log.info("[DataInitializer] Eventos sembrados");

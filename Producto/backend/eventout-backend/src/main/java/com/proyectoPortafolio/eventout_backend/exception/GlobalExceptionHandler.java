@@ -38,8 +38,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
+        // Preferimos el error de campo; si la violación es de clase (p. ej. la
+        // coherencia de fechas), caemos al error global antes que a un genérico.
         FieldError fieldError = ex.getBindingResult().getFieldError();
-        String mensaje = fieldError != null ? fieldError.getDefaultMessage() : "Datos inválidos";
+        String mensaje;
+        if (fieldError != null) {
+            mensaje = fieldError.getDefaultMessage();
+        } else if (ex.getBindingResult().getGlobalError() != null) {
+            mensaje = ex.getBindingResult().getGlobalError().getDefaultMessage();
+        } else {
+            mensaje = "Datos inválidos";
+        }
         return build(HttpStatus.BAD_REQUEST, mensaje);
     }
 

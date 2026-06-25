@@ -1,17 +1,14 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Icon } from '@/view/components/ui/Icon'
+import { ConfirmDialog } from '@/view/components/ui/ConfirmDialog'
 import { useAuth } from '@/core/auth/useAuth'
+import { useLogout } from '@/core/auth/useLogout'
 import { avatarUrl } from '@/core/utils'
 
 export function PerfilPage() {
-  const { user, profile, isAdmin, isDemo, signOut } = useAuth()
-  const navigate = useNavigate()
-
-  async function handleSignOut() {
-    await signOut()
-    navigate('/')
-  }
+  const { user, profile, isAdmin, isDemo } = useAuth()
+  const logout = useLogout('/')
 
   const nombre = profile?.nombre ?? 'Usuario'
   const iniciales = nombre
@@ -112,13 +109,24 @@ export function PerfilPage() {
       {!isDemo && (
         <button
           type="button"
-          onClick={handleSignOut}
+          onClick={logout.pedirConfirmacion}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-outline-variant bg-white px-4 py-3 text-sm font-semibold text-error shadow-sm hover:bg-error-container/20"
         >
           <Icon name="logout" size="sm" />
           Cerrar sesión
         </button>
       )}
+
+      <ConfirmDialog
+        open={logout.confirming}
+        title="Cerrar sesión"
+        message="¿Seguro que quieres cerrar tu sesión? Tendrás que volver a ingresar para acceder a tus favoritos y propuestas."
+        confirmLabel="Cerrar sesión"
+        cancelLabel="Cancelar"
+        loading={logout.loading}
+        onConfirm={logout.confirmar}
+        onCancel={logout.cancelar}
+      />
     </div>
   )
 }

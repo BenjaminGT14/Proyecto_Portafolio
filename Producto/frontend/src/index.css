@@ -5,15 +5,12 @@
   max-width: none;
   display: inline;
 }
-/* Asegura que el z-index de popups y controles quede sobre el header fijo */
-.leaflet-pane,
-.leaflet-top,
-.leaflet-bottom {
-  z-index: 10;
-}
-.leaflet-popup-pane {
-  z-index: 20;
-}
+/* El apilamiento del mapa se gestiona en el wrapper del componente (Mapa.jsx usa
+   `isolation: isolate`), que confina los z-index internos de Leaflet (panes ~400,
+   controles ~1000) dentro de su propio contexto, dejando el mapa completo por
+   debajo del navbar fijo. Por eso ya no se fuerza aquí el z-index de Leaflet
+   (hacerlo era frágil: leaflet.css se inyecta después de este archivo al ser el
+   mapa un chunk lazy, y ganaba por orden de cascada). */
 
 @theme {
   /* === Material 3 — paleta del mockup === */

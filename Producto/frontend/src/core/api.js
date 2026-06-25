@@ -3,7 +3,19 @@
 // contrato { data, error } que usa la app.
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
-const TOKEN_KEY = 'eventout_token'
+// Exportado para que AuthContext pueda filtrar el evento `storage` por esta clave
+// (detectar borrado/cambio del token desde otra pestaña).
+export const TOKEN_KEY = 'eventout_token'
+
+// Manejador global de "sesión inválida". Lo registra AuthContext para no acoplar
+// este módulo (agnóstico de React) al árbol de componentes. Se invoca cuando el
+// backend rechaza una petición autenticada (401/403): típicamente token expirado
+// o cuenta deshabilitada. Limpia el estado de sesión en React.
+let onUnauthorized = null
+
+export function setUnauthorizedHandler(fn) {
+  onUnauthorized = fn
+}
 
 export function getToken() {
   try {
@@ -50,6 +62,13 @@ export async function apiFetch(path, { method = 'GET', body } = {}) {
     })
   } catch {
     return { data: null, error: new Error('No se pudo conectar con el servidor') }
+  }
+
+  // Sesión inválida: el backend rechaza una petición que SÍ llevaba token
+  // (expirado o cuenta deshabilitada). Notificamos para limpiar la sesión local.
+  // Solo si había token, para no interferir con el 401 de credenciales del login.
+  if (token && (res.status === 401 || res.status === 403)) {
+    onUnauthorized?.()
   }
 
   if (res.status === 204) return { data: null, error: null }

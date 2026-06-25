@@ -30,6 +30,7 @@ export function RegistroPage() {
           <Input
             id="nombre"
             required
+            maxLength={80}
             value={vm.nombre}
             onChange={(e) => vm.setNombre(e.target.value)}
             placeholder="Cómo quieres que te veamos"
@@ -42,6 +43,7 @@ export function RegistroPage() {
             type="email"
             autoComplete="email"
             required
+            maxLength={254}
             value={vm.email}
             onChange={(e) => vm.setEmail(e.target.value)}
             placeholder="tu@correo.cl"
@@ -54,7 +56,8 @@ export function RegistroPage() {
             type="password"
             autoComplete="new-password"
             required
-            minLength={6}
+            minLength={8}
+            maxLength={72}
             value={vm.password}
             onChange={(e) => vm.setPassword(e.target.value)}
           />
@@ -66,7 +69,8 @@ export function RegistroPage() {
             type="password"
             autoComplete="new-password"
             required
-            minLength={6}
+            minLength={8}
+            maxLength={72}
             value={vm.confirm}
             onChange={(e) => vm.setConfirm(e.target.value)}
           />

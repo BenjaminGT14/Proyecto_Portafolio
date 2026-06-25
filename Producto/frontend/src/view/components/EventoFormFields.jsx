@@ -2,6 +2,8 @@
 // y por la página pública "Proponer evento" (propuesta de usuario). Es
 // presentacional: recibe el estado del formulario y el setter desde el viewmodel.
 
+import { ahoraDatetimeLocal } from '@/viewmodel/shared/validations'
+
 const INPUT_CLS =
   'w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-secondary focus:ring-1 focus:ring-secondary'
 
@@ -21,6 +23,12 @@ function Field({ label, children }) {
 }
 
 export function EventoFormFields({ form, setField, lugares = EMPTY_LUGARES }) {
+  // Comparación lexicográfica válida por el formato ordenable "YYYY-MM-DDTHH:mm".
+  const minInicio = ahoraDatetimeLocal()
+  const inicioEnPasado = form.fecha_inicio && form.fecha_inicio < minInicio
+  const finInvalida =
+    form.fecha_fin && form.fecha_inicio && form.fecha_fin <= form.fecha_inicio
+
   return (
     <>
       <Field label="Nombre *">
@@ -61,19 +69,33 @@ export function EventoFormFields({ form, setField, lugares = EMPTY_LUGARES }) {
             required
             type="datetime-local"
             aria-label="Fecha inicio"
+            min={minInicio}
+            aria-invalid={Boolean(inicioEnPasado)}
             value={form.fecha_inicio}
             onChange={(e) => setField('fecha_inicio', e.target.value)}
             className={INPUT_CLS}
           />
+          {inicioEnPasado && (
+            <span className="block text-xs font-medium text-error">
+              La fecha de inicio no puede estar en el pasado.
+            </span>
+          )}
         </Field>
         <Field label="Fecha término">
           <input
             type="datetime-local"
             aria-label="Fecha término"
+            min={form.fecha_inicio || minInicio}
+            aria-invalid={Boolean(finInvalida)}
             value={form.fecha_fin}
             onChange={(e) => setField('fecha_fin', e.target.value)}
             className={INPUT_CLS}
           />
+          {finInvalida && (
+            <span className="block text-xs font-medium text-error">
+              La fecha de término debe ser posterior a la de inicio.
+            </span>
+          )}
         </Field>
       </div>
       <div className="flex items-center gap-4">
