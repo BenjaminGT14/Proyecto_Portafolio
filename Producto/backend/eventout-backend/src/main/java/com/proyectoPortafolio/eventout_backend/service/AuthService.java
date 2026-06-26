@@ -2,10 +2,7 @@ package com.proyectoPortafolio.eventout_backend.service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,19 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.proyectoPortafolio.eventout_backend.dto.AuthResponse;
 import com.proyectoPortafolio.eventout_backend.dto.UsuarioDto;
 import com.proyectoPortafolio.eventout_backend.dto.request.LoginRequest;
-import com.proyectoPortafolio.eventout_backend.dto.request.NuevaPasswordRequest;
-import com.proyectoPortafolio.eventout_backend.dto.request.RecuperarPasswordRequest;
 import com.proyectoPortafolio.eventout_backend.dto.request.RegisterRequest;
-import com.proyectoPortafolio.eventout_backend.exception.BadRequestException;
 import com.proyectoPortafolio.eventout_backend.exception.ConflictException;
 import com.proyectoPortafolio.eventout_backend.exception.NotFoundException;
 import com.proyectoPortafolio.eventout_backend.exception.UnauthorizedException;
 import com.proyectoPortafolio.eventout_backend.mapper.DtoMapper;
-import com.proyectoPortafolio.eventout_backend.model.PasswordResetToken;
 import com.proyectoPortafolio.eventout_backend.model.Usuario;
 import com.proyectoPortafolio.eventout_backend.model.enums.EstadoUsuario;
 import com.proyectoPortafolio.eventout_backend.model.enums.Rol;
-import com.proyectoPortafolio.eventout_backend.repository.PasswordResetTokenRepository;
 import com.proyectoPortafolio.eventout_backend.repository.UsuarioRepository;
 import com.proyectoPortafolio.eventout_backend.security.JwtService;
 
@@ -33,29 +25,17 @@ import com.proyectoPortafolio.eventout_backend.security.JwtService;
 public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
-    private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final EmailService emailService;
-    private final long resetExpirationMs;
-    private final String frontendUrl;
 
     public AuthService(
             UsuarioRepository usuarioRepository,
-            PasswordResetTokenRepository tokenRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService,
-            EmailService emailService,
-            @Value("${app.jwt.reset-expiration-ms}") long resetExpirationMs,
-            @Value("${app.frontend.url}") String frontendUrl
+            JwtService jwtService
     ) {
         this.usuarioRepository = usuarioRepository;
-        this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.emailService = emailService;
-        this.resetExpirationMs = resetExpirationMs;
-        this.frontendUrl = frontendUrl;
     }
 
     @Transactional
@@ -104,44 +84,6 @@ public class AuthService {
         if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
             throw new UnauthorizedException("Tu cuenta está deshabilitada. Contacta al administrador.");
         }
-    }
-
-    /**
-     * Genera un token de recuperación y envía el correo. No revela si el email
-     * existe (para evitar enumeración de usuarios).
-     */
-    @Transactional
-    public void recuperarPassword(RecuperarPasswordRequest req) {
-        String email = req.email().trim().toLowerCase();
-        usuarioRepository.findByEmail(email).ifPresent(usuario -> {
-            PasswordResetToken token = PasswordResetToken.builder()
-                    .token(UUID.randomUUID().toString())
-                    .usuario(usuario)
-                    .expiresAt(Instant.now().plusMillis(resetExpirationMs))
-                    .used(false)
-                    .build();
-            tokenRepository.save(token);
-            String enlace = frontendUrl + "/recuperar-password/nueva?token="
-                    + URLEncoder.encode(token.getToken(), StandardCharsets.UTF_8);
-            emailService.enviarRecuperacionPassword(usuario.getEmail(), usuario.getNombre(), enlace);
-        });
-    }
-
-    @Transactional
-    public void nuevaPassword(NuevaPasswordRequest req) {
-        PasswordResetToken token = tokenRepository.findById(req.token())
-                .orElseThrow(() -> new BadRequestException("El enlace de recuperación no es válido"));
-        if (token.isUsed()) {
-            throw new BadRequestException("El enlace de recuperación ya fue utilizado");
-        }
-        if (token.getExpiresAt().isBefore(Instant.now())) {
-            throw new BadRequestException("El enlace de recuperación expiró");
-        }
-        Usuario usuario = token.getUsuario();
-        usuario.setPasswordHash(passwordEncoder.encode(req.password()));
-        usuarioRepository.save(usuario);
-        token.setUsed(true);
-        tokenRepository.save(token);
     }
 
     private String avatarPorDefecto(String nombre) {

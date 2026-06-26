@@ -53,9 +53,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**", "/v3/api-docs")
                         .permitAll()
                         // Auth pública
-                        .requestMatchers(
-                                "/auth/register", "/auth/login",
-                                "/auth/recuperar-password", "/auth/nueva-password")
+                        .requestMatchers("/auth/register", "/auth/login")
                         .permitAll()
                         // Lecturas públicas
                         .requestMatchers(HttpMethod.GET, "/categorias", "/categorias/**").permitAll()

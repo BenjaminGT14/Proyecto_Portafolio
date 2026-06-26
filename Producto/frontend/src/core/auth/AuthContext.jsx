@@ -112,14 +112,6 @@ export function AuthProvider({ children }) {
     return { error: null }
   }, [])
 
-  const resetPassword = useCallback(async ({ email }) => {
-    return apiFetch('/auth/recuperar-password', { method: 'POST', body: { email } })
-  }, [])
-
-  const nuevaPassword = useCallback(async ({ token, password }) => {
-    return apiFetch('/auth/nueva-password', { method: 'POST', body: { token, password } })
-  }, [])
-
   const user = profile ? { id: profile.id_usuario, email: profile.email } : null
 
   const value = {
@@ -132,8 +124,6 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut,
-    resetPassword,
-    nuevaPassword,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

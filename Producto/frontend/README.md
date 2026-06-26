@@ -58,22 +58,22 @@ VITE_API_URL=http://localhost:8080
 
 3. Reiniciar `npm run dev`.
 
-## Funcionalidades implementadas (Sprints 1-4)
+## Funcionalidades implementadas
 
 | HU | Funcionalidad | Estado |
 |----|---------------|--------|
 | HU-01 | Registro con correo + contraseña | ✓ |
-| HU-02 | Recuperación de contraseña | ✓ |
-| HU-03 | Búsqueda de lugares por categoría | ✓ |
-| HU-04 | Filtros avanzados (costo, comuna) | ✓ |
-| HU-05 | Mapa interactivo con Google Maps | ✓ |
-| HU-06 | Detalle de lugar/evento | ✓ |
-| HU-07 | Publicación de reseñas | ✓ |
-| HU-08 | Votar reseñas | ✓ |
-| HU-09 | Favoritos | pendiente (Sprint 5) |
-| HU-10 | Diseño responsivo | ✓ |
-| HU-11 | Gestión admin de contenido | pendiente (Sprint 5) |
-| HU-12 | Moderación de reseñas | pendiente (Sprint 5) |
+| HU-02 | Búsqueda de lugares por categoría | ✓ |
+| HU-03 | Filtros avanzados (costo, comuna) | ✓ |
+| HU-04 | Mapa interactivo (Leaflet / OpenStreetMap) | ✓ |
+| HU-05 | Detalle de lugar/evento | ✓ |
+| HU-06 | Publicación de reseñas | ✓ |
+| HU-07 | Votar reseñas | ✓ |
+| HU-08 | Favoritos | ✓ |
+| HU-09 | Diseño responsivo | ✓ |
+| HU-10 | Gestión admin de contenido | ✓ |
+| HU-11 | Moderación de reseñas | ✓ |
+| HU-12 | Propuesta de eventos por usuarios | ✓ |
 
 ## Scripts
 

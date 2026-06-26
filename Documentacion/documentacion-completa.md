@@ -19,17 +19,16 @@
 5. [Frontend — Arquitectura MVVM](#5-frontend--arquitectura-mvvm)
 6. [Cómo el frontend habla con el backend (`api.js`)](#6-cómo-el-frontend-habla-con-el-backend-apijs)
 7. [Autenticación — flujo completo (JWT)](#7-autenticación--flujo-completo-jwt)
-8. [Recuperación de contraseña](#8-recuperación-de-contraseña)
-9. [Modelo de datos](#9-modelo-de-datos)
-10. [API REST — endpoints](#10-api-rest--endpoints)
-11. [Seguridad del backend](#11-seguridad-del-backend)
-12. [Componentes React destacados](#12-componentes-react-destacados)
-13. [Routing y rutas protegidas](#13-routing-y-rutas-protegidas)
-14. [Variables de entorno](#14-variables-de-entorno)
-15. [Testing](#15-testing)
-16. [Cómo ejecutar el proyecto](#16-cómo-ejecutar-el-proyecto)
-17. [Despliegue](#17-despliegue)
-18. [Glosario](#18-glosario)
+8. [Modelo de datos](#8-modelo-de-datos)
+9. [API REST — endpoints](#9-api-rest--endpoints)
+10. [Seguridad del backend](#10-seguridad-del-backend)
+11. [Componentes React destacados](#11-componentes-react-destacados)
+12. [Routing y rutas protegidas](#12-routing-y-rutas-protegidas)
+13. [Variables de entorno](#13-variables-de-entorno)
+14. [Testing](#14-testing)
+15. [Cómo ejecutar el proyecto](#15-cómo-ejecutar-el-proyecto)
+16. [Despliegue](#16-despliegue)
+17. [Glosario](#17-glosario)
 
 ---
 
@@ -88,7 +87,7 @@ El sistema tiene dos piezas que se comunican por **REST/JSON** con autenticació
 
 | Herramienta | ¿Para qué sirve? |
 |-------------|------------------|
-| **Java 21 + Spring Boot 3.5** | Framework del backend (Web, Data JPA, Security, Validation, Mail) |
+| **Java 21 + Spring Boot 3.5** | Framework del backend (Web, Data JPA, Security, Validation) |
 | **MySQL 8** | Base de datos relacional (`eventout_db`) |
 | **Hibernate (JPA)** | ORM: mapea entidades Java ↔ tablas |
 | **JWT (JJWT 0.12)** | Autenticación stateless por token |
@@ -123,7 +122,7 @@ Proyecto_Portafolio/
     │   │   ├── model/        ← eventoutRepository.js, mockData.js
     │   │   ├── viewmodel/    ← hooks de lógica por pantalla (public/auth/admin)
     │   │   ├── view/         ← components/ (ui, layout) y pages/
-    │   │   └── test/         ← TODAS las pruebas, planas aquí (ver §15)
+    │   │   └── test/         ← TODAS las pruebas, planas aquí (ver §14)
     │   ├── .env.example      ← VITE_API_URL
     │   ├── vite.config.js / vitest.config.js
     │   └── vercel.json
@@ -239,13 +238,13 @@ const value = {
   isAuthenticated: Boolean(profile),
   isAdmin: profile?.rol === 'admin',
   isDemo: false,                      // el modo demo quedó retirado (ver nota)
-  signUp, signIn, signOut, resetPassword, nuevaPassword,
+  signUp, signIn, signOut,
 }
 ```
 
 - **`signUp`** hace auto-login: tras `/auth/register` guarda el token y navega al home.
 - **`signOut`** simplemente borra el token y el perfil (stateless: no hay endpoint de logout).
-- **`isAdmin`** se deriva del `rol` del perfil; las rutas `/admin` lo exigen (ver §13).
+- **`isAdmin`** se deriva del `rol` del perfil; las rutas `/admin` lo exigen (ver §12).
 
 > **Nota — modo demo retirado.** Existió un "modo demo" sin backend (`isDemo`). Hoy
 > `isDemo` es siempre `false` y la app requiere el backend corriendo. Pueden quedar
@@ -253,31 +252,7 @@ const value = {
 
 ---
 
-## 8. Recuperación de contraseña
-
-Flujo en dos pasos, contra `/auth/recuperar-password` y `/auth/nueva-password`:
-
-```
-1. El usuario pide recuperar su clave (escribe su email)
-   → POST /auth/recuperar-password
-   → el backend crea un PasswordResetToken de un solo uso (expira en 1 h)
-     y envía un correo con el enlace:
-        <frontend>/recuperar-password/nueva?token=...
-2. El usuario abre el enlace → NuevaPasswordPage lee ?token= de la URL
-3. Escribe la nueva contraseña → POST /auth/nueva-password { token, password }
-4. El backend valida el token (no usado, no expirado) y actualiza la clave
-```
-
-Por privacidad, `/auth/recuperar-password` siempre responde el mismo mensaje
-("Si el email existe, enviamos un enlace de recuperación"), exista o no la cuenta.
-
-> **En desarrollo:** si el SMTP no está configurado, el backend **no falla**:
-> escribe el enlace de recuperación en su log, de modo que el flujo se puede
-> probar igual.
-
----
-
-## 9. Modelo de datos
+## 8. Modelo de datos
 
 Las entidades JPA (`src/main/java/.../model`) generan las tablas vía Hibernate
 (`ddl-auto=update`). Las PK tipo UUID se guardan como `VARCHAR(36)`; `categoria`
@@ -292,7 +267,6 @@ usa una PK de texto (ej. `cat-parque`).
 | `Resena` | resena | id, titulo, contenido, puntuacion (1–5), estado, created_at | `@ManyToOne` → Usuario (obligatorio); Lugar **XOR** Evento |
 | `VotoResena` | voto_resena | id, es_positivo | `@ManyToOne` → Usuario, Resena (único por usuario+reseña) |
 | `Favorito` | favorito | id | `@ManyToOne` → Usuario; Lugar **XOR** Evento |
-| `PasswordResetToken` | password_reset_token | token, expires_at, used | `@ManyToOne` → Usuario |
 
 ### Enums (se serializan en minúsculas para el frontend)
 
@@ -324,15 +298,13 @@ usuarios de prueba (contraseñas cifradas con BCrypt):
 
 ---
 
-## 10. API REST — endpoints
+## 9. API REST — endpoints
 
 | Método | Ruta | Acceso | Descripción |
 |--------|------|--------|-------------|
 | POST | `/auth/register` | público | Crear cuenta (auto-login: devuelve token) |
 | POST | `/auth/login` | público | Iniciar sesión → `{ token, usuario }` |
 | GET | `/auth/me` | autenticado | Perfil del usuario del token |
-| POST | `/auth/recuperar-password` | público | Envía correo con enlace de reset |
-| POST | `/auth/nueva-password` | público | Cambia la clave usando el token del correo |
 | GET | `/categorias` | público | Lista de categorías |
 | GET | `/lugares` | público | Lista con filtros `idCategoria, comuna, costo, q` |
 | GET | `/lugares/{id}` | público | Detalle de un lugar |
@@ -357,7 +329,7 @@ usuarios de prueba (contraseñas cifradas con BCrypt):
 
 ---
 
-## 11. Seguridad del backend
+## 10. Seguridad del backend
 
 Definida en [SecurityConfig.java](../Producto/backend/eventout-backend/src/main/java/com/proyectoPortafolio/eventout_backend/config/SecurityConfig.java):
 
@@ -368,7 +340,7 @@ Definida en [SecurityConfig.java](../Producto/backend/eventout-backend/src/main/
 
 | Tipo | Rutas |
 |------|-------|
-| Público | `POST /auth/{register,login,recuperar-password,nueva-password}`; `GET` de `/categorias`, `/lugares`, `/eventos`, `/resenas`; Swagger |
+| Público | `POST /auth/{register,login}`; `GET` de `/categorias`, `/lugares`, `/eventos`, `/resenas`; Swagger |
 | Autenticado | todo lo demás (`POST /resenas`, `/votos`, `/favoritos/**`, `/eventos/propuestas`, `GET /auth/me`…) |
 | Solo admin (`ROLE_ADMIN`) | `/admin/**` |
 
@@ -377,7 +349,7 @@ Definida en [SecurityConfig.java](../Producto/backend/eventout-backend/src/main/
 
 ---
 
-## 12. Componentes React destacados
+## 11. Componentes React destacados
 
 Todos viven en `src/view/` y son agnósticos del backend (no cambiaron en la migración).
 
@@ -390,7 +362,7 @@ Todos viven en `src/view/` y son agnósticos del backend (no cambiaron en la mig
 
 ---
 
-## 13. Routing y rutas protegidas
+## 12. Routing y rutas protegidas
 
 Definido en [App.jsx](../Producto/frontend/src/App.jsx) con React Router v7 (SPA).
 
@@ -404,7 +376,6 @@ Definido en [App.jsx](../Producto/frontend/src/App.jsx) con React Router v7 (SPA
 ├── /eventos/:id            EventoDetallePage
 ├── /mapa                   MapaPage
 ├── /login /registro        (lazy)
-├── /recuperar-password     /recuperar-password/nueva   (lazy)
 ├── /favoritos              FavoritosPage        (protegida)
 ├── /perfil                 PerfilPage           (protegida)
 └── *                       NotFoundPage
@@ -421,7 +392,7 @@ Definido en [App.jsx](../Producto/frontend/src/App.jsx) con React Router v7 (SPA
 
 ---
 
-## 14. Variables de entorno
+## 13. Variables de entorno
 
 ### Frontend
 
@@ -442,13 +413,11 @@ Plantilla en [.env.example](../Producto/frontend/.env.example). El `.env.local`
 | Datasource MySQL | `eventout_db` en `localhost:3306` (se crea sola) | Conexión a la BD |
 | `JWT_SECRET` | clave de desarrollo | Firma HS256 (cambiar en producción) |
 | `JWT_EXPIRATION_MS` | `86400000` (24 h) | Vida del access token |
-| `JWT_RESET_EXPIRATION_MS` | `3600000` (1 h) | Vida del token de reset |
-| `FRONTEND_URL` | `http://localhost:5173` | Origen permitido (CORS) y base de enlaces de correo |
-| `MAIL_HOST/PORT/USERNAME/PASSWORD` | Gmail SMTP / vacío | Envío de correos |
+| `FRONTEND_URL` | `http://localhost:5173` | Origen permitido (CORS) |
 
 ---
 
-## 15. Testing
+## 14. Testing
 
 ### Frontend (Vitest + Testing Library)
 
@@ -466,17 +435,30 @@ npm run test:watch  # modo watch
 npm run test:coverage
 ```
 
-Qué se cubre hoy: funciones puras de `utils` (`formatPrecio`, `imgPlaceholder`) y
-componentes (`Button`, `Estrellas`, `LugarCard`).
+Qué se cubre hoy: **10 pruebas en 4 archivos** — funciones puras de `utils`
+(`formatPrecio`, `imgPlaceholder`) y componentes (`Button`, `Estrellas`, `LugarCard`).
 
-### Backend (JUnit)
+### Backend (JUnit + Mockito)
 
-Hoy solo existe el test de arranque por defecto (`contextLoads`). Ampliar con
-tests de servicios (Mockito) y de controllers (`@WebMvcTest`) queda pendiente.
+**16 pruebas en 7 archivos** (`src/test/java/.../eventout_backend/`):
+
+- **Servicios** (unitarias con Mockito, sin BD): `AuthServiceTest`, `EventoServiceTest`,
+  `ResenaServiceTest`, `VotoServiceTest`, `FavoritoServiceTest`.
+- **Validación de DTO** (Hibernate Validator): `EventoRequestValidationTest` (coherencia de
+  fechas y límites de longitud).
+- **Integración**: `EventoutBackendApplicationTests` (`contextLoads`; levanta el contexto de
+  Spring, requiere MySQL corriendo).
+
+```bash
+cd Producto/backend/eventout-backend
+./mvnw test
+```
+
+> Detalle completo de cada caso (IDs, qué valida, comandos) en [TESTING.md](TESTING.md).
 
 ---
 
-## 16. Cómo ejecutar el proyecto
+## 15. Cómo ejecutar el proyecto
 
 ### Backend (requiere MySQL corriendo)
 
@@ -503,20 +485,20 @@ Opcional: crear `.env.local` con `VITE_API_URL=http://localhost:8080` (es el val
 
 ---
 
-## 17. Despliegue
+## 16. Despliegue
 
 - **Frontend:** `npm run build` genera `/dist` (estático). El `vercel.json` ya
   incluye el rewrite SPA. En el hosting hay que definir `VITE_API_URL` apuntando
   al backend desplegado.
-- **Backend:** requiere un MySQL accesible y las variables de entorno de la §14
-  (sobre todo `JWT_SECRET` y, para correo real, `MAIL_*`).
+- **Backend:** requiere un MySQL accesible y las variables de entorno de la §13
+  (sobre todo `JWT_SECRET`).
 
 > La configuración de despliegue conjunto (dónde se hospeda el backend, SMTP real)
 > aún está pendiente — ver "Pendientes" en [arquitectura-backend-springboot.md](arquitectura-backend-springboot.md).
 
 ---
 
-## 18. Glosario
+## 17. Glosario
 
 | Término | Definición |
 |---------|------------|
