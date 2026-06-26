@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { listarLugares, proponerEvento } from '@/model/eventoutRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
+import { validarFechasEvento } from '@/viewmodel/shared/validations'
 
 const EMPTY_FORM = {
   nombre: '',
@@ -43,8 +44,9 @@ export function useProponerEventoViewModel() {
       setError('El nombre del evento es obligatorio.')
       return
     }
-    if (!form.fecha_inicio) {
-      setError('La fecha de inicio es obligatoria.')
+    const errorFechas = validarFechasEvento(form)
+    if (errorFechas) {
+      setError(errorFechas)
       return
     }
     setSaving(true)

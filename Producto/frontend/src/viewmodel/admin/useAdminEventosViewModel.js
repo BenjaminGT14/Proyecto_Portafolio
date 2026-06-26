@@ -8,6 +8,7 @@ import {
   listarLugares,
 } from '@/model/eventoutRepository'
 import { useAsyncData } from '@/viewmodel/shared/useAsyncData'
+import { validarFechasEvento } from '@/viewmodel/shared/validations'
 
 const EMPTY_FORM = {
   nombre: '',
@@ -74,6 +75,11 @@ export function useAdminEventosViewModel() {
   async function handleGuardar(e) {
     e.preventDefault()
     setError(null)
+    const errorFechas = validarFechasEvento(form)
+    if (errorFechas) {
+      setError(errorFechas)
+      return
+    }
     setSaving(true)
     const payload = buildPayload(form)
     const { error: err } =

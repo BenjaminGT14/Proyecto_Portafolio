@@ -33,6 +33,7 @@ export function FiltrosBar({
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <Input
               id="q"
+              maxLength={100}
               value={filtros.q ?? ''}
               onChange={(e) => update({ q: e.target.value })}
               placeholder="Nombre, descripción…"

@@ -45,12 +45,13 @@ export function MapaPage() {
 function Leyenda() {
   return (
     <div className="flex flex-wrap gap-4 rounded-xl border border-outline-variant bg-white px-4 py-3 text-sm text-on-surface-variant">
+      {/* Colores alineados con los marcadores del mapa (Mapa.jsx): lugar #00658d, evento #00baff */}
       <span className="flex items-center gap-2">
-        <span className="inline-block size-3 rounded-full bg-secondary" />
+        <span className="inline-block size-3 rounded-full bg-[#00658d]" />
         Lugar
       </span>
       <span className="flex items-center gap-2">
-        <span className="inline-block size-3 rounded-full bg-secondary-container" />
+        <span className="inline-block size-3 rounded-full bg-[#00baff]" />
         Evento
       </span>
     </div>

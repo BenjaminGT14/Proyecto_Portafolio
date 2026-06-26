@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.proyectoPortafolio.eventout_backend.model.enums.EstadoUsuario;
 import com.proyectoPortafolio.eventout_backend.model.enums.Rol;
 
 import jakarta.persistence.Column;
@@ -50,6 +51,15 @@ public class Usuario {
     @Builder.Default
     private Rol rol = Rol.USER;
 
+    /**
+     * Estado de habilitación de la cuenta. Una cuenta BLOQUEADA no puede iniciar
+     * sesión y su sesión vigente se invalida en la próxima validación con /auth/me.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    @Builder.Default
+    private EstadoUsuario estado = EstadoUsuario.ACTIVO;
+
     @Column(name = "created_at")
     private Instant createdAt;
 
@@ -58,5 +68,6 @@ public class Usuario {
         if (id == null) id = UUID.randomUUID().toString();
         if (createdAt == null) createdAt = Instant.now();
         if (rol == null) rol = Rol.USER;
+        if (estado == null) estado = EstadoUsuario.ACTIVO;
     }
 }

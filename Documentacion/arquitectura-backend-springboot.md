@@ -23,7 +23,7 @@ El sistema tiene un **backend propio** que centraliza toda la lógica y los dato
 ### ¿Para qué sirve?
 - **Independencia:** el equipo controla 100% del backend (no depende de un BaaS externo).
 - **Demostrable en la defensa:** capas clásicas (Controller, Service, Repository, Model),
-  seguridad con JWT, envío de correos y persistencia en MySQL — todo construido por nosotros.
+  seguridad con JWT y persistencia en MySQL — todo construido por nosotros.
 - **Mismo comportamiento de la app:** el frontend se mantiene casi igual; solo cambió la
   **capa de datos** y la **autenticación**.
 
@@ -31,7 +31,7 @@ El sistema tiene un **backend propio** que centraliza toda la lógica y los dato
 | Capa | Tecnología |
 |---|---|
 | Lenguaje / runtime | Java 21 (compila también en JDK 24) |
-| Framework | Spring Boot 3.5.x (Web, Data JPA, Security, Validation, Mail) |
+| Framework | Spring Boot 3.5.x (Web, Data JPA, Security, Validation) |
 | Base de datos | MySQL 8 (`eventout_db`) |
 | ORM | Hibernate (JPA) |
 | Autenticación | JWT (librería JJWT 0.12) |
@@ -55,7 +55,7 @@ src/main/java/.../eventout_backend/
 │   └── DataInitializer.java            # siembra de datos inicial
 ├── model/                              # entidades JPA (tablas)
 │   ├── Categoria, Lugar, Evento, Usuario,
-│   │   Resena, VotoResena, Favorito, PasswordResetToken
+│   │   Resena, VotoResena, Favorito
 │   └── enums/ Rol, EstadoResena
 ├── repository/                         # interfaces Spring Data JPA
 ├── dto/                                # objetos de transporte (entrada/salida)
@@ -63,7 +63,7 @@ src/main/java/.../eventout_backend/
 ├── mapper/DtoMapper.java               # entidad → DTO
 ├── service/                            # lógica de negocio
 │   ├── AuthService, CategoriaService, LugarService, EventoService,
-│   │   ResenaService, VotoService, FavoritoService, EmailService
+│   │   ResenaService, VotoService, FavoritoService
 ├── security/                           # JWT
 │   ├── JwtService, JwtAuthenticationFilter, AuthUser
 ├── controller/                         # endpoints REST
@@ -100,7 +100,6 @@ usa una PK de texto como `cat-parque`):
 | `Resena` | resena | id, titulo, contenido, puntuacion, estado, created_at | `@ManyToOne` → Usuario, Lugar **XOR** Evento |
 | `VotoResena` | voto_resena | id, es_positivo | `@ManyToOne` → Usuario, Resena (único por usuario+reseña) |
 | `Favorito` | favorito | id | `@ManyToOne` → Usuario, Lugar **XOR** Evento |
-| `PasswordResetToken` | password_reset_token | token, expires_at, used | `@ManyToOne` → Usuario |
 
 ### Enums
 - **`Rol`**: `USER`, `ADMIN`. En JSON se serializa en minúsculas (`"user"`/`"admin"`) para que
@@ -141,7 +140,7 @@ lo guarda y lo envía en cada petición; el servidor lo valida sin guardar sesi�
 
 | Tipo | Reglas |
 |---|---|
-| Público (sin token) | `POST /auth/**` (register, login, recuperar, nueva), `GET /categorias`, `GET /lugares/**`, `GET /eventos/**`, `GET /resenas`, Swagger |
+| Público (sin token) | `POST /auth/register`, `POST /auth/login`, `GET /categorias`, `GET /lugares/**`, `GET /eventos/**`, `GET /resenas`, Swagger |
 | Autenticado | `POST /resenas`, `/votos`, `/favoritos/**`, `GET /auth/me` |
 | Solo admin (`ROLE_ADMIN`) | `/admin/**` |
 
@@ -157,8 +156,6 @@ seguridad responden en JSON: `401 {"error":"No autenticado"}` / `403 {"error":"A
 | POST | `/auth/register` | público | Crear cuenta (auto-login: devuelve token) |
 | POST | `/auth/login` | público | Iniciar sesión → token + usuario |
 | GET | `/auth/me` | autenticado | Perfil del usuario del token |
-| POST | `/auth/recuperar-password` | público | Envía correo con enlace de reset |
-| POST | `/auth/nueva-password` | público | Cambia la contraseña usando el token del correo |
 | GET | `/categorias` | público | Lista de categorías |
 | GET | `/lugares` | público | Lista con filtros `idCategoria, comuna, costo, q` |
 | GET | `/lugares/{id}` | público | Detalle de un lugar |
@@ -212,20 +209,7 @@ formato `{ "error": "..." }` (el mismo que el frontend ya leía como `json.error
 
 ---
 
-## 8. Correo (recuperación de contraseña)
-
-`EmailService` usa **JavaMailSender**:
-- `POST /auth/recuperar-password` genera un `PasswordResetToken` de un solo uso (expira en 1 h),
-  arma el enlace `<frontend>/recuperar-password/nueva?token=...` y envía el correo.
-- `POST /auth/nueva-password` valida el token (no usado, no expirado) y cambia la contraseña.
-
-> Si el SMTP **no** está configurado, el servicio **no falla**: escribe el enlace en el log del
-> backend, de modo que el flujo sigue siendo probable en desarrollo. La configuración real de
-> correo (Gmail u otro) queda pendiente.
-
----
-
-## 9. Siembra de datos (DataInitializer)
+## 8. Siembra de datos (DataInitializer)
 
 `DataInitializer` (un `CommandLineRunner`) carga, **la primera vez que la BD está vacía**, los
 mismos datos que el frontend usaba como *mock*: 6 categorías, 8 lugares, 5 eventos, 6 reseñas y
@@ -240,21 +224,20 @@ bloque solo se ejecuta si su tabla está vacía.
 
 ---
 
-## 10. Configuración (`application.properties`)
+## 9. Configuración (`application.properties`)
 
 Puntos clave:
 - **Datasource MySQL**: la BD `eventout_db` se crea sola la primera vez
   (`createDatabaseIfNotExist=true`). El usuario/contraseña se completan en el archivo.
 - **JPA**: `ddl-auto=update` (Hibernate crea/actualiza las tablas según las entidades).
 - **Jackson**: `SNAKE_CASE`, fechas en ISO, zona `America/Santiago`.
-- **JWT**: `app.jwt.secret` (clave HS256), `app.jwt.expiration-ms` (24 h),
-  `app.jwt.reset-expiration-ms` (1 h). Sobre-escribibles por variables de entorno.
+- **JWT**: `app.jwt.secret` (clave HS256), `app.jwt.expiration-ms` (24 h).
+  Sobre-escribibles por variables de entorno.
 - **CORS**: permite el origen del frontend (`app.frontend.url`, por defecto `http://localhost:5173`).
-- **Mail**: `spring.mail.*` (host, puerto, usuario, clave) por variables de entorno.
 
 ---
 
-## 11. Integración del Frontend
+## 10. Integración del Frontend
 
 El frontend sigue el patrón **MVVM** (`view` / `viewmodel` / `model`). La **capa de datos** y la
 **autenticación** se apoyan en el contrato `{ data, error }`, de modo que viewmodels y
@@ -264,8 +247,7 @@ componentes consumen la API sin acoplarse a los detalles del transporte.
 |---|---|
 | `src/core/api.js` | Cliente REST con `fetch`: base URL (`VITE_API_URL`), token JWT en `localStorage` y helper `buildQuery`. Devuelve siempre `{ data, error }`. |
 | `src/model/eventoutRepository.js` | Capa de acceso a datos: cada función llama a la API REST manteniendo firmas estables para los viewmodels. |
-| `src/core/auth/AuthContext.jsx` | `signUp/signIn/signOut/resetPassword/nuevaPassword` usan los endpoints `/auth/*`; al cargar valida el token con `/auth/me`. |
-| `src/view/pages/auth/NuevaPassword.jsx` | Lee el `token` desde la URL (`?token=`) y llama a `/auth/nueva-password`. |
+| `src/core/auth/AuthContext.jsx` | `signUp/signIn/signOut` usan los endpoints `/auth/*`; al cargar valida el token con `/auth/me`. |
 | `.env.example` | Documenta `VITE_API_URL` (URL del backend). |
 
 ### Detalle del contrato `{ data, error }`
@@ -279,7 +261,7 @@ componentes consumen la API sin acoplarse a los detalles del transporte.
 
 ---
 
-## 12. Cómo ejecutar
+## 11. Cómo ejecutar
 
 ### Backend
 ```bash
@@ -301,7 +283,7 @@ Opcional: crear `.env` con `VITE_API_URL=http://localhost:8080` (es el valor por
 
 ---
 
-## 13. Verificaciones realizadas
+## 12. Verificaciones realizadas
 
 - **Backend**: compila (Maven), arranca contra MySQL, crea `eventout_db`, siembra datos y
   responde correctamente. Probado por `curl`: endpoints públicos, login JWT, `/auth/me`,
@@ -312,7 +294,7 @@ Opcional: crear `.env` con `VITE_API_URL=http://localhost:8080` (es el valor por
 
 ---
 
-## 14. Feature: propuestas de eventos por usuarios
+## 13. Feature: propuestas de eventos por usuarios
 
 Los usuarios autenticados pueden **proponer eventos**, que quedan **pendientes de
 aprobación** por un administrador antes de hacerse públicos. El formulario de propuesta es el
@@ -355,8 +337,7 @@ Verificado end-to-end (navegador): usuario propone → no aparece en público �
 
 ---
 
-## 15. Pendientes
+## 14. Pendientes
 
-1. **Configuración real de envío de correos** (SMTP) — se hará después.
-2. (Opcional) Mover el secret JWT y credenciales a variables de entorno para producción.
-3. (Opcional) Vista "mis propuestas" para que el usuario siga el estado de lo que propuso.
+1. (Opcional) Mover el secret JWT y credenciales a variables de entorno para producción.
+2. (Opcional) Vista "mis propuestas" para que el usuario siga el estado de lo que propuso.
