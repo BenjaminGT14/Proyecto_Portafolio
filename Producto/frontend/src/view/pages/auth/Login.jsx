@@ -24,12 +24,7 @@ export function LoginPage() {
           />
         </div>
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Contraseña</Label>
-            <Link to="/recuperar-password" className="text-xs text-secondary hover:underline">
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
+          <Label htmlFor="password">Contraseña</Label>
           <Input
             id="password"
             type="password"

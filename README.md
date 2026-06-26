@@ -20,7 +20,7 @@ Está construido como un monorepo con dos piezas:
 
 ## Características
 
-- Autenticación con JWT: registro, inicio de sesión y recuperación de contraseña por correo.
+- Autenticación con JWT: registro e inicio de sesión.
 - Búsqueda y filtros por categoría, comuna y costo (gratis / pagado).
 - Mapa interactivo con lugares y eventos georreferenciados (Leaflet).
 - Reseñas de la comunidad: publicación solo para usuarios autenticados, visibles al instante.
@@ -118,7 +118,6 @@ npm run dev                   # http://localhost:5173
 | Frontend | `VITE_API_URL` | URL base del backend (por defecto `http://localhost:8080`) |
 | Backend | `spring.datasource.username` / `password` | Credenciales de MySQL |
 | Backend | `JWT_SECRET` | Clave HS256 para firmar los tokens (override en producción) |
-| Backend | `MAIL_USERNAME` / `MAIL_PASSWORD` | SMTP para correos de recuperación (opcional en desarrollo) |
 
 ## Usuarios de prueba
 

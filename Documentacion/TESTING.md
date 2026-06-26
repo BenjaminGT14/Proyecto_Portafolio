@@ -4,7 +4,7 @@ Documentación técnica de la estrategia y el conjunto de pruebas automatizadas 
 proyecto **EventOut** (backend Spring Boot + frontend React). Describe **qué se
 prueba**, **dónde está cada prueba** y **cómo ejecutarlas**.
 
-> Última verificación: **27 pruebas en verde** (17 backend + 10 frontend),
+> Última verificación: **26 pruebas en verde** (16 backend + 10 frontend),
 > `BUILD SUCCESS` y `lint` sin errores.
 
 ---
@@ -13,9 +13,9 @@ prueba**, **dónde está cada prueba** y **cómo ejecutarlas**.
 
 | Capa | Framework | Archivos | Casos | Tipo principal | Estado |
 |------|-----------|:-------:|:-----:|----------------|:------:|
-| Backend | JUnit 5 + Mockito + AssertJ + Spring Boot Test | 7 | **17** | Unitarias (servicios/validación) + 1 de integración | ✅ |
+| Backend | JUnit 5 + Mockito + AssertJ + Spring Boot Test | 7 | **16** | Unitarias (servicios/validación) + 1 de integración | ✅ |
 | Frontend | Vitest + Testing Library + jsdom | 4 | **10** | Unitarias de UI (render + interacción) + funciones puras | ✅ |
-| **Total** | — | **11** | **27** | — | ✅ |
+| **Total** | — | **11** | **26** | — | ✅ |
 
 **Filosofía:** pruebas rápidas y deterministas que aíslan la **lógica de negocio**
 (servicios) y los **contratos de la interfaz** (componentes), sin depender de
@@ -128,14 +128,13 @@ El reporte de resultados queda en `target/surefire-reports/`.
 |----|--------|------------|--------------------|
 | INT-01 | `contextLoads` | Que toda la configuración de Spring (beans, JPA, seguridad, *datasource*) arranca sin errores. | El contexto carga correctamente. |
 
-#### `AuthServiceTest` — Autenticación (5 casos)
+#### `AuthServiceTest` — Autenticación (4 casos)
 | ID | Método | Qué valida | Resultado esperado |
 |----|--------|------------|--------------------|
 | AUTH-01 | `register_emailDuplicado_lanzaConflict` | No se permite registrar un email ya existente (insensible a mayúsculas). | Lanza `ConflictException`; **no** se guarda el usuario. |
 | AUTH-02 | `login_passwordIncorrecta_lanzaUnauthorized` | Contraseña incorrecta en login. | Lanza `UnauthorizedException`. |
 | AUTH-03 | `login_usuarioBloqueado_lanzaUnauthorized` | Cuenta `BLOQUEADO` no puede iniciar sesión aunque la contraseña sea correcta. | Lanza `UnauthorizedException`. |
 | AUTH-04 | `me_usuarioBloqueado_lanzaUnauthorized` | Una cuenta bloqueada mientras hay sesión es rechazada al revalidar (`/auth/me`). | Lanza `UnauthorizedException`. |
-| AUTH-05 | `nuevaPassword_valido_actualizaHashYMarcaTokenUsado` | Restablecimiento de contraseña con token válido. | Actualiza el hash, marca el token como usado y persiste ambos. |
 
 #### `EventoServiceTest` — Eventos (2 casos)
 | ID | Método | Qué valida | Resultado esperado |
@@ -270,28 +269,27 @@ El reporte de cobertura HTML queda en `coverage/index.html`.
 | 3 | AUTH-02 | Backend | AuthService | Unitaria |
 | 4 | AUTH-03 | Backend | AuthService | Unitaria |
 | 5 | AUTH-04 | Backend | AuthService | Unitaria |
-| 6 | AUTH-05 | Backend | AuthService | Unitaria |
-| 7 | EVT-01 | Backend | EventoService | Unitaria |
-| 8 | EVT-02 | Backend | EventoService | Unitaria |
-| 9 | VAL-01 | Backend | EventoRequest (validación) | Unitaria |
-| 10 | VAL-02 | Backend | EventoRequest (validación) | Unitaria |
-| 11 | VAL-03 | Backend | EventoRequest (validación) | Unitaria |
-| 12 | VAL-04 | Backend | EventoRequest (validación) | Unitaria |
-| 13 | RES-01 | Backend | ResenaService | Unitaria |
-| 14 | RES-02 | Backend | ResenaService | Unitaria |
-| 15 | VOT-01 | Backend | VotoService | Unitaria |
-| 16 | VOT-02 | Backend | VotoService | Unitaria |
-| 17 | FAV-01 | Backend | FavoritoService | Unitaria |
-| 18 | UTIL-01 | Frontend | utils.formatPrecio | Unitaria |
-| 19 | UTIL-02 | Frontend | utils.formatPrecio | Unitaria |
-| 20 | UTIL-03 | Frontend | utils.imgPlaceholder | Unitaria |
-| 21 | BTN-01 | Frontend | Button | Unitaria UI |
-| 22 | BTN-02 | Frontend | Button | Unitaria UI |
-| 23 | STAR-01 | Frontend | Estrellas | Unitaria UI |
-| 24 | STAR-02 | Frontend | Estrellas | Unitaria UI |
-| 25 | CARD-01 | Frontend | LugarCard | Unitaria UI |
-| 26 | CARD-02 | Frontend | LugarCard | Unitaria UI |
-| 27 | CARD-03 | Frontend | LugarCard | Unitaria UI |
+| 6 | EVT-01 | Backend | EventoService | Unitaria |
+| 7 | EVT-02 | Backend | EventoService | Unitaria |
+| 8 | VAL-01 | Backend | EventoRequest (validación) | Unitaria |
+| 9 | VAL-02 | Backend | EventoRequest (validación) | Unitaria |
+| 10 | VAL-03 | Backend | EventoRequest (validación) | Unitaria |
+| 11 | VAL-04 | Backend | EventoRequest (validación) | Unitaria |
+| 12 | RES-01 | Backend | ResenaService | Unitaria |
+| 13 | RES-02 | Backend | ResenaService | Unitaria |
+| 14 | VOT-01 | Backend | VotoService | Unitaria |
+| 15 | VOT-02 | Backend | VotoService | Unitaria |
+| 16 | FAV-01 | Backend | FavoritoService | Unitaria |
+| 17 | UTIL-01 | Frontend | utils.formatPrecio | Unitaria |
+| 18 | UTIL-02 | Frontend | utils.formatPrecio | Unitaria |
+| 19 | UTIL-03 | Frontend | utils.imgPlaceholder | Unitaria |
+| 20 | BTN-01 | Frontend | Button | Unitaria UI |
+| 21 | BTN-02 | Frontend | Button | Unitaria UI |
+| 22 | STAR-01 | Frontend | Estrellas | Unitaria UI |
+| 23 | STAR-02 | Frontend | Estrellas | Unitaria UI |
+| 24 | CARD-01 | Frontend | LugarCard | Unitaria UI |
+| 25 | CARD-02 | Frontend | LugarCard | Unitaria UI |
+| 26 | CARD-03 | Frontend | LugarCard | Unitaria UI |
 
 ---
 
