@@ -1,6 +1,8 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { Icon } from '@/view/components/ui/Icon'
+import { ConfirmDialog } from '@/view/components/ui/ConfirmDialog'
 import { useAuth } from '@/core/auth/useAuth'
+import { useLogout } from '@/core/auth/useLogout'
 import { cn } from '@/core/utils'
 
 const NAV_ITEMS = [
@@ -11,13 +13,8 @@ const NAV_ITEMS = [
 ]
 
 export function AdminLayout() {
-  const { profile, signOut } = useAuth()
-  const navigate = useNavigate()
-
-  async function handleSignOut() {
-    await signOut()
-    navigate('/')
-  }
+  const { profile } = useAuth()
+  const logout = useLogout('/')
 
   return (
     <div className="flex min-h-screen bg-surface-container-low">
@@ -53,7 +50,7 @@ export function AdminLayout() {
           <p className="mb-2 truncate text-xs text-outline">{profile?.nombre ?? 'Admin'}</p>
           <button
             type="button"
-            onClick={handleSignOut}
+            onClick={logout.pedirConfirmacion}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-error"
           >
             <Icon name="logout" size="sm" />
@@ -61,6 +58,17 @@ export function AdminLayout() {
           </button>
         </div>
       </aside>
+
+      <ConfirmDialog
+        open={logout.confirming}
+        title="Cerrar sesión"
+        message="¿Seguro que quieres salir del panel de administración? Tendrás que volver a ingresar."
+        confirmLabel="Cerrar sesión"
+        cancelLabel="Cancelar"
+        loading={logout.loading}
+        onConfirm={logout.confirmar}
+        onCancel={logout.cancelar}
+      />
 
       {/* Main */}
       <div className="flex flex-1 flex-col">

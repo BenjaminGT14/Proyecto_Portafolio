@@ -1,6 +1,8 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Icon } from '@/view/components/ui/Icon'
+import { ConfirmDialog } from '@/view/components/ui/ConfirmDialog'
 import { useAuth } from '@/core/auth/useAuth'
+import { useLogout } from '@/core/auth/useLogout'
 import { cn } from '@/core/utils'
 
 const BASE_NAV = [
@@ -19,13 +21,9 @@ const navCls = (isActive) =>
   )
 
 export function Header() {
-  const { isAuthenticated, isAdmin, profile, signOut, isDemo } = useAuth()
+  const { isAuthenticated, isAdmin, profile, isDemo } = useAuth()
   const navigate = useNavigate()
-
-  async function handleSignOut() {
-    await signOut()
-    navigate('/')
-  }
+  const logout = useLogout('/')
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]">
@@ -73,7 +71,7 @@ export function Header() {
               Modo demo
             </span>
           ) : isAuthenticated ? (
-            <button type="button" onClick={handleSignOut}
+            <button type="button" onClick={logout.pedirConfirmacion}
               className="hidden items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 md:inline-flex">
               <Icon name="logout" size="sm" />
               Salir
@@ -119,6 +117,17 @@ export function Header() {
           </NavLink>
         )}
       </div>
+
+      <ConfirmDialog
+        open={logout.confirming}
+        title="Cerrar sesión"
+        message="¿Seguro que quieres cerrar tu sesión? Tendrás que volver a ingresar para acceder a tus favoritos y propuestas."
+        confirmLabel="Cerrar sesión"
+        cancelLabel="Cancelar"
+        loading={logout.loading}
+        onConfirm={logout.confirmar}
+        onCancel={logout.cancelar}
+      />
     </nav>
   )
 }

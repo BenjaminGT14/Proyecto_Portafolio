@@ -17,8 +17,8 @@ export function useRegistroViewModel() {
     e.preventDefault()
     setError(null)
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
+    if (password.length < 8 || password.length > 72) {
+      setError('La contraseña debe tener entre 8 y 72 caracteres.')
       return
     }
     if (password !== confirm) {

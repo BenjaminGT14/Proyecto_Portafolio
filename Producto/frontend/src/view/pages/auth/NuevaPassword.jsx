@@ -25,8 +25,8 @@ export function NuevaPasswordPage() {
       setError('El enlace de recuperación no es válido o está incompleto.')
       return
     }
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
+    if (password.length < 8 || password.length > 72) {
+      setError('La contraseña debe tener entre 8 y 72 caracteres.')
       return
     }
     if (password !== confirm) {
@@ -67,7 +67,8 @@ export function NuevaPasswordPage() {
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
+              maxLength={72}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -79,7 +80,8 @@ export function NuevaPasswordPage() {
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
+              maxLength={72}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
             />

@@ -23,6 +23,7 @@ import com.proyectoPortafolio.eventout_backend.exception.UnauthorizedException;
 import com.proyectoPortafolio.eventout_backend.mapper.DtoMapper;
 import com.proyectoPortafolio.eventout_backend.model.PasswordResetToken;
 import com.proyectoPortafolio.eventout_backend.model.Usuario;
+import com.proyectoPortafolio.eventout_backend.model.enums.EstadoUsuario;
 import com.proyectoPortafolio.eventout_backend.model.enums.Rol;
 import com.proyectoPortafolio.eventout_backend.repository.PasswordResetTokenRepository;
 import com.proyectoPortafolio.eventout_backend.repository.UsuarioRepository;
@@ -82,6 +83,7 @@ public class AuthService {
         if (!passwordEncoder.matches(req.password(), usuario.getPasswordHash())) {
             throw new UnauthorizedException("Email o contraseña incorrectos");
         }
+        verificarHabilitado(usuario);
         return new AuthResponse(jwtService.generarToken(usuario), DtoMapper.toUsuarioDto(usuario));
     }
 
@@ -89,7 +91,19 @@ public class AuthService {
     public UsuarioDto me(String idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        verificarHabilitado(usuario);
         return DtoMapper.toUsuarioDto(usuario);
+    }
+
+    /**
+     * Rechaza con 401 a las cuentas que no están ACTIVO. Es el punto de
+     * enforcement de estado: el frontend valida la sesión contra /auth/me y, si
+     * la cuenta quedó BLOQUEADA en BD, recibe 401 y limpia la sesión local.
+     */
+    private void verificarHabilitado(Usuario usuario) {
+        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+            throw new UnauthorizedException("Tu cuenta está deshabilitada. Contacta al administrador.");
+        }
     }
 
     /**

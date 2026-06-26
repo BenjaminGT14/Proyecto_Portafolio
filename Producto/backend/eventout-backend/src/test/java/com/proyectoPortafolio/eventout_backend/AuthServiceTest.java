@@ -24,6 +24,7 @@ import com.proyectoPortafolio.eventout_backend.exception.ConflictException;
 import com.proyectoPortafolio.eventout_backend.exception.UnauthorizedException;
 import com.proyectoPortafolio.eventout_backend.model.PasswordResetToken;
 import com.proyectoPortafolio.eventout_backend.model.Usuario;
+import com.proyectoPortafolio.eventout_backend.model.enums.EstadoUsuario;
 import com.proyectoPortafolio.eventout_backend.repository.PasswordResetTokenRepository;
 import com.proyectoPortafolio.eventout_backend.repository.UsuarioRepository;
 import com.proyectoPortafolio.eventout_backend.security.JwtService;
@@ -69,6 +70,27 @@ class AuthServiceTest {
         when(passwordEncoder.matches("mala", "hash")).thenReturn(false);
 
         assertThatThrownBy(() -> service.login(new LoginRequest("ana@mail.com", "mala")))
+                .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    void login_usuarioBloqueado_lanzaUnauthorized() {
+        Usuario bloqueado = Usuario.builder().id("u1").email("ana@mail.com").nombre("Ana")
+                .passwordHash("hash").estado(EstadoUsuario.BLOQUEADO).build();
+        when(usuarioRepository.findByEmail("ana@mail.com")).thenReturn(Optional.of(bloqueado));
+        when(passwordEncoder.matches("secret1", "hash")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.login(new LoginRequest("ana@mail.com", "secret1")))
+                .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    void me_usuarioBloqueado_lanzaUnauthorized() {
+        Usuario bloqueado = Usuario.builder().id("u1").email("ana@mail.com").nombre("Ana")
+                .passwordHash("hash").estado(EstadoUsuario.BLOQUEADO).build();
+        when(usuarioRepository.findById("u1")).thenReturn(Optional.of(bloqueado));
+
+        assertThatThrownBy(() -> service.me("u1"))
                 .isInstanceOf(UnauthorizedException.class);
     }
 
