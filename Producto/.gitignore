@@ -7,3 +7,6 @@ skills-lock.json
 node_modules
 dist
 dist-ssr
+
+# Variables de entorno con credenciales (NO subir). Solo se versiona .env.example
+.env

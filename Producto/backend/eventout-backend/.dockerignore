@@ -1,0 +1,5 @@
+# No copiar artefactos locales al contexto de build (se compilan dentro del contenedor).
+target
+.git
+.idea
+*.iml

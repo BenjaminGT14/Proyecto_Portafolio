@@ -1,0 +1,53 @@
+# ============================================================
+# Orquesta los 3 contenedores del proyecto EventOut:
+#   db       -> base de datos MySQL
+#   backend  -> API REST Spring Boot
+#   frontend -> React servido por nginx
+#
+# Local:    docker compose up --build
+# Servidor: igual, pero con las URLs publicas en el archivo .env
+# ============================================================
+services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: eventout_db
+    volumes:
+      # Persiste los datos aunque el contenedor se borre/recree.
+      - db-data:/var/lib/mysql
+    healthcheck:
+      # El backend espera a que esto pase (depends_on: service_healthy).
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend/eventout-backend
+    environment:
+      # "db" es el nombre del servicio de arriba: Docker lo resuelve como hostname.
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/eventout_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Santiago&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Se "hornea" en el build de Vite (ver Dockerfile del frontend).
+        VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
