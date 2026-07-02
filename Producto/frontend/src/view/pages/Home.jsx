@@ -15,7 +15,7 @@ export function HomePage() {
   return (
     <>
       {/* ---------- Hero ---------- */}
-      <section className="relative flex min-h-[560px] items-center overflow-hidden pt-20 sm:min-h-[700px] md:min-h-[860px] xl:min-h-[940px]">
+      <section className="relative flex min-h-[560px] items-center overflow-hidden pt-32 md:pt-20 sm:min-h-[700px] md:min-h-[860px] xl:min-h-[940px]">
         <div className="absolute inset-0 z-0">
           {/* Una sola imagen que ocupa TODO el espacio de forma limpia */}
           <img
