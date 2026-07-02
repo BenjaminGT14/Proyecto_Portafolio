@@ -10,8 +10,7 @@ Aplicación web responsiva que centraliza eventos, actividades y lugares de inte
 - **Estilos:** Tailwind CSS v4 + componentes propios estilo shadcn
 - **Routing:** React Router 7
 - **Backend:** API REST propia en Spring Boot (Java) + MySQL
-- **Mapas:** Google Maps Platform (pendiente, Sprint 3)
-- **Despliegue:** Vercel
+- **Mapas:** Leaflet
 
 ## Estructura
 
