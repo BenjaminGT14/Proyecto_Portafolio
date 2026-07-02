@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    El backend EventOut en EC2 usa HTTP plano (sin HTTPS). Android bloquea el trafico
+    "cleartext" por defecto, asi que lo habilitamos SOLO para la IP del servidor.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">54.210.195.222</domain>
+    </domain-config>
+</network-security-config>
