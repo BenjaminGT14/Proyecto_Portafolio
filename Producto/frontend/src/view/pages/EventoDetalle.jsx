@@ -56,7 +56,7 @@ export function EventoDetallePage() {
               puntos={[punto]}
               centro={{ lat: punto.latitud, lng: punto.longitud }}
               zoom={15}
-              altura="h-80"
+              altura="h-64 md:h-80"
             />
           ) : (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">

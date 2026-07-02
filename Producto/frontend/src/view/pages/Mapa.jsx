@@ -35,7 +35,8 @@ export function MapaPage() {
         </span>
       </div>
 
-      <Mapa puntos={vm.puntos} altura="h-[70vh]" />
+      {/* Altura menor en móvil para que el mapa no exceda el viewport con el navbar fijo */}
+      <Mapa puntos={vm.puntos} altura="h-[55vh] md:h-[70vh]" />
 
       <Leyenda />
     </div>

@@ -63,7 +63,7 @@ export function EventoFormFields({ form, setField, lugares = EMPTY_LUGARES }) {
           ))}
         </select>
       </Field>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Fecha inicio *">
           <input
             required
@@ -98,7 +98,7 @@ export function EventoFormFields({ form, setField, lugares = EMPTY_LUGARES }) {
           )}
         </Field>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <label className="flex cursor-pointer items-center gap-2 text-sm">
           <input
             type="checkbox"
