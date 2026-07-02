@@ -10,6 +10,7 @@
 services:
   db:
     image: mysql:8
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: eventout_db
@@ -25,6 +26,7 @@ services:
 
   backend:
     build: ./backend/eventout-backend
+    restart: unless-stopped
     environment:
       # "db" es el nombre del servicio de arriba: Docker lo resuelve como hostname.
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/eventout_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Santiago&allowPublicKeyRetrieval=true
@@ -44,6 +46,7 @@ services:
       args:
         # Se "hornea" en el build de Vite (ver Dockerfile del frontend).
         VITE_API_URL: ${VITE_API_URL}
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
