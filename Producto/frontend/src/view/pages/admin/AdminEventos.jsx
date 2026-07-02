@@ -24,7 +24,7 @@ export function AdminEventosPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Eventos</h1>
           <p className="mt-1 text-sm text-on-surface-variant">
@@ -94,8 +94,8 @@ export function AdminEventosPage() {
       {vm.loading ? (
         <TableSkeleton cols={6} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-outline-variant bg-white shadow-sm">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-outline-variant bg-white shadow-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="border-b border-outline-variant bg-surface-container-low">
               <tr>
                 {['Nombre', 'Lugar', 'Fecha inicio', 'Estado', 'Precio', 'Acciones'].map((h) => (

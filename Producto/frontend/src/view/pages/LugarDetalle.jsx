@@ -50,7 +50,7 @@ export function LugarDetallePage() {
       <section className="grid gap-6 md:grid-cols-3">
         <div className="space-y-4 md:col-span-2">
           <h2 className="text-lg font-semibold text-slate-900">Ubicación</h2>
-          <Mapa puntos={[punto]} centro={{ lat: lugar.latitud, lng: lugar.longitud }} zoom={15} altura="h-80" />
+          <Mapa puntos={[punto]} centro={{ lat: lugar.latitud, lng: lugar.longitud }} zoom={15} altura="h-64 md:h-80" />
         </div>
 
         <aside className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

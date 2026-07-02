@@ -7,7 +7,7 @@ export function AdminLugaresPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Lugares</h1>
           <p className="mt-1 text-sm text-on-surface-variant">
@@ -29,8 +29,8 @@ export function AdminLugaresPage() {
       {vm.loading ? (
         <TableSkeleton cols={5} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-outline-variant bg-white shadow-sm">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-outline-variant bg-white shadow-sm">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="border-b border-outline-variant bg-surface-container-low">
               <tr>
                 {['Nombre', 'Categoría', 'Comuna', 'Precio', 'Acciones'].map((h) => (
@@ -97,7 +97,7 @@ export function AdminLugaresPage() {
               <textarea aria-label="Descripción" value={vm.form.descripcion} onChange={(e) => vm.setField('descripcion', e.target.value)}
                 rows={3} className={INPUT_CLS} />
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Categoría *">
                 <select required value={vm.form.id_categoria} onChange={(e) => vm.setField('id_categoria', e.target.value)}
                   className={INPUT_CLS}>
@@ -122,7 +122,7 @@ export function AdminLugaresPage() {
               <input aria-label="Horario" value={vm.form.horario} onChange={(e) => vm.setField('horario', e.target.value)}
                 placeholder="Ej: Lun a Dom 09:00 - 18:00" className={INPUT_CLS} />
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Latitud">
                 <input type="number" step="any" aria-label="Latitud" value={vm.form.latitud}
                   onChange={(e) => vm.setField('latitud', e.target.value)} className={INPUT_CLS} />
@@ -132,7 +132,7 @@ export function AdminLugaresPage() {
                   onChange={(e) => vm.setField('longitud', e.target.value)} className={INPUT_CLS} />
               </Field>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <label className="flex cursor-pointer items-center gap-2 text-sm">
                 <input type="checkbox" checked={vm.form.es_gratuito}
                   onChange={(e) => vm.setField('es_gratuito', e.target.checked)}

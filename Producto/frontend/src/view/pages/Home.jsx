@@ -15,7 +15,7 @@ export function HomePage() {
   return (
     <>
       {/* ---------- Hero ---------- */}
-      <section className="relative flex min-h-[700px] items-center overflow-hidden pt-20 md:min-h-[860px] xl:min-h-[940px]">
+      <section className="relative flex min-h-[560px] items-center overflow-hidden pt-20 sm:min-h-[700px] md:min-h-[860px] xl:min-h-[940px]">
         <div className="absolute inset-0 z-0">
           {/* Una sola imagen que ocupa TODO el espacio de forma limpia */}
           <img
@@ -117,7 +117,7 @@ export function HomePage() {
           <h2 className="mb-10 text-center text-3xl font-semibold tracking-tight xl:text-4xl">
             Explora por categorías
           </h2>
-          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 md:grid-cols-3 lg:max-w-none lg:grid-cols-6">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:max-w-none lg:grid-cols-6">
             {vm.categorias.map((c) => {
               const cfg = vm.getCategoriaConfig(c.nombre)
               return (
@@ -192,7 +192,7 @@ export function HomePage() {
 
       {/* ---------- CTA final ---------- */}
       <section className="mx-auto max-w-7xl px-6 py-20 xl:max-w-[1440px] xl:px-10">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-on-primary-fixed to-secondary p-12 text-center shadow-xl md:text-left xl:p-16">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-on-primary-fixed to-secondary p-6 text-center shadow-xl sm:p-10 md:p-12 md:text-left xl:p-16">
           <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-10">
             <div className="min-w-0 flex-1">
               <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
@@ -205,7 +205,7 @@ export function HomePage() {
             <button
               type="button"
               onClick={vm.goToLugares}
-              className="shrink-0 self-start rounded-xl bg-white px-10 py-4 text-lg font-bold text-primary shadow-lg transition-all hover:scale-105 active:scale-95 md:self-auto"
+              className="shrink-0 self-center rounded-xl bg-white px-6 py-3 text-base font-bold text-primary shadow-lg transition-all hover:scale-105 active:scale-95 sm:px-10 sm:py-4 sm:text-lg md:self-auto"
             >
               Ver panoramas cercanos
             </button>
