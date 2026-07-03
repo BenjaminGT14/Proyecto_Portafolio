@@ -15,7 +15,9 @@ export function HomePage() {
   return (
     <>
       {/* ---------- Hero ---------- */}
-      <section className="relative flex min-h-[560px] items-center overflow-hidden pt-32 md:pt-20 sm:min-h-[700px] md:min-h-[860px] xl:min-h-[940px]">
+      {/* pt-32 en móvil: el navbar fijo mide ~120px ahí (fila principal + nav scroll),
+          así el titular del hero no queda oculto debajo. En md+ la fila extra desaparece. */}
+      <section className="relative flex min-h-[560px] items-center overflow-hidden pt-32 pb-10 sm:min-h-[700px] md:min-h-[860px] md:pt-20 md:pb-0 xl:min-h-[940px]">
         <div className="absolute inset-0 z-0">
           {/* Una sola imagen que ocupa TODO el espacio de forma limpia */}
           <img
